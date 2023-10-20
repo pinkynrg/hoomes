@@ -1,6 +1,8 @@
 from utils import get
 from bs4 import BeautifulSoup
 from db import init_db, upsert_house_record
+import concurrent.futures
+from functools import partial
 import re
 import time
 
@@ -15,35 +17,51 @@ class Idealista:
   def format_name(city):
     return city.replace(' ', '-').lower()
   
-  def get_max_page(html_tree):
-    pagination = html_tree.find("div", attrs={"class": "pagination"})
-    page_containers = pagination.find_all("li", attrs={"class": None})
-    page_links = [ c.find("a") for c in page_containers ]
-    numbers = [ int(l.contents[0]) for l in page_links if l is not None ]
-    max_page = max(numbers)
-    return max_page
+  def get_next_page(html_tree):
+    anchor = html_tree.find("a", attrs={"class": "icon-arrow-right-after"})
+    if anchor:
+      page_number_match = re.search(r'/lista-(\d+)\.htm', anchor['href'])
+      if page_number_match:
+          page_number = page_number_match.group(1)
+          return page_number    
   
   def get_total_houses(page_link):
     html_text = get(Idealista.HOST, page_link)
     soup = BeautifulSoup(html_text, "html.parser")
     h1_element = soup.find('h1', id='h1-container')
     if h1_element:
-      matches = re.search(r'\d+\.?\d+', h1_element.text)
+      matches = re.search(r'\d+(\.\d+)?', h1_element.text)
       if matches:
           extracted_number = matches.group().replace('.', '')
           extracted_integer = int(extracted_number)
           return extracted_integer
 
-  def get_house_comment(page_link):
+  def get_house_data(city, page_link):
     try:
-      # print("fetching comments @ {}".format(Idealista.PROTOCOL + page_link))
       html_text = get(Idealista.HOST, page_link)
-      html_tree = BeautifulSoup(html_text, "html.parser")
-      div_comment = html_tree.find("div", attrs={"class": "comment"})
-      p_comment = div_comment.find("div").find("p")
-      return p_comment.contents[0]
-    except Exception:
-      print("something went wrong fetching comment @ {}".format(page_link))
+      soup = BeautifulSoup(html_text, "html.parser")
+
+      price = soup.find("span", attrs={"class": "info-data-price"}).find("span").contents[0].replace(".", "")
+      title = soup.find("span", attrs={"class": "main-info__title-main"}).contents[0]
+      location = soup.find("span", attrs={"class": "main-info__title-minor"}).contents[0]
+      comment = soup.find("div", attrs={"class": "comment"}).find("div").find("p").contents[0]
+      m2_string = soup.find('div', class_='info-features').find('span').contents[0]
+      m2 = int(re.search(r'\d+', m2_string).group())
+
+
+      upsert_house_record(
+        uuid = page_link, 
+        url = Idealista.PROTOCOL + Idealista.HOST + page_link, 
+        title = title,
+        location = location,
+        comment = comment, 
+        m2 = m2,
+        source = 'idealista',
+        price = price,
+        city = city, 
+      )
+    except Exception as e:
+      print("something went wrong fetching/storing comment @ {}: {}".format(page_link, e))
 
   def get_filters_part(
       min_price = None, 
@@ -66,78 +84,85 @@ class Idealista:
     return "con-" + ",".join(filtered) + "/" if len(filtered) else None
 
   def fetch_links( 
-      city, 
+      custom_path = None,
+      city = None, 
       sub_category = 'provincia',
       min_price = 1,
       max_price = 1000000,
       **kwargs,
     ):
     
-    formatted_city = Idealista.format_name(city)
-    formatted_sub = Idealista.format_name(sub_category)
-    valid_page = True
-    page = 1
+    next_page = 1
 
     def get_final_url(page):
-      page_link = "/vendita-case/{city}-{sub_category}/{filters}".format(
+      
+      if custom_path:
+        page_link = custom_path.format(
           filters=Idealista.get_filters_part(min_price=min_price, max_price=max_price, **kwargs) or "", 
-          city=formatted_city,
-          sub_category=formatted_sub,
         )
+      elif city:
+        page_link = "/vendita-case/{city}-{sub_category}{filters}".format(
+          city=Idealista.format_name(city),
+          sub_category=Idealista.format_name(sub_category),
+          filters=Idealista.get_filters_part(min_price=min_price, max_price=max_price, **kwargs) or "", 
+        )
+      else: 
+        print("insert at least city or custom_path")
+      
       return page_link + "lista-{}.htm".format(page)
 
-    page_link = get_final_url(1)
+    page_link = get_final_url(next_page)
     total_houses = Idealista.get_total_houses(page_link)
     print(Idealista.PROTOCOL + Idealista.HOST + page_link, total_houses)
 
-    # max pages offered by Idealista
+    # max pages offered by Idealista is 60 x 30
     if total_houses > 60 * 30:
       print("Too many houses ({})".format(total_houses))
-      Idealista.fetch_links(city=city, sub_category=sub_category, min_price=min_price, max_price=int(max_price/2))
-      Idealista.fetch_links(city=city, sub_category=sub_category, min_price=int(max_price/2), max_price=max_price)
+      mid_price = min_price+int((max_price-min_price)/2)
+      Idealista.fetch_links(custom_path=custom_path, city=city, sub_category=sub_category, min_price=min_price, max_price=mid_price)
+      Idealista.fetch_links(custom_path=custom_path, city=city, sub_category=sub_category, min_price=mid_price, max_price=max_price)
       pass
     else:
-      while valid_page:
-        
-        page_link = get_final_url(page)
+      while next_page: 
+        page_link = get_final_url(next_page)
         print("fetching house links @ {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
         html_text = get(Idealista.HOST, page_link)
         html_tree = BeautifulSoup(html_text, "html.parser")
-        max_page = Idealista.get_max_page(html_tree)
-        valid_page = False if max_page < page else True
+        item_container = html_tree.find("section", attrs={"class": "items-list"})
+        items_list = item_container.find_all("article", attrs={"class": "item"})
+        links = [item.find("a", href=True, attrs={"class": "item-link"})["href"] for item in items_list]
         
-        if valid_page:
-          item_container = html_tree.find("section", attrs={"class": "items-list"})
-          items_list = item_container.find_all("article", attrs={"class": "item"})
-          for item in items_list:
-            link = item.find("a", href=True, attrs={"class": "item-link"})
-            house_comment = Idealista.get_house_comment(link["href"])
-            keyword_matched = 0
-            
-            upsert_house_record(
-              uuid = link["href"], 
-              url = link["href"], 
-              comment = house_comment, 
-              source = 'idealista'
-            )
-          page += 1
+        # Create a new function that takes both fixed_param and link
+        get_house_data_with_city = partial(Idealista.get_house_data, custom_path or city)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+          executor.map(get_house_data_with_city, links)
+        next_page = Idealista.get_next_page(html_tree)
 
 # Record the start time
-start_time = time.time()
+# start_time = time.time()
+cities = [
+  "Modena",
+  "Parma",
+  "Reggio Emilia",
+  "Cremona",
+]
 
-response = Idealista.fetch_links(
-  city="Reggio Emilia",
-  # min_price=1,
-  # max_price=200000,
-  # min_size=1,
-  # max_size=100,
-  # ariacondizionata=True,
-  # ascensori=True,
-)
+for city in cities: 
+  Idealista.fetch_links(
+    # city=city,
+    min_price=1,
+    max_price=250000,
+    custom_path="/point/vendita-case/9/{filters}?shape=%28%28%7B%7CntGwhknA%3F%7Cpp%5B%7CfiI%3F%3F%7Dpp%5B%7DfiI%3F%29%29",
+    # min_size=1,
+    # max_size=40,
+    # ariacondizionata=True,
+    # ascensori=True,
+  )
 
-# Record the end time
-end_time = time.time()
+# # Record the end time
+# end_time = time.time()
 
-# Calculate the elapsed time
-elapsed_time = end_time - start_time
-print(f"Elapsed time: {elapsed_time} seconds")
+# # Calculate the elapsed time
+# elapsed_time = end_time - start_time
+# print(f"Elapsed time: {elapsed_time} seconds")
