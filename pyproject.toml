@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 beautifulsoup4 = "^4.12.2"
+flask = "^3.0.0"
+sqlalchemy = "^2.0.22"
 
 
 [build-system]

@@ -1,61 +1,67 @@
-import sqlite3
-from datetime import datetime 
+from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, String, Float, TIMESTAMP
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 DATABASE_NAME = 'data.db'
 
+Base = declarative_base()
+
+class House(Base):
+    __tablename__ = 'houses'
+    uuid = Column(String, primary_key=True)
+    url = Column(String)
+    title = Column(String)
+    location = Column(String)
+    m2 = Column(Integer)
+    city = Column(String)
+    price = Column(Float)
+    comment = Column(String)
+    source = Column(String)
+    created_at = Column(TIMESTAMP, default=datetime.now)
+    updated_at = Column(TIMESTAMP, onupdate=datetime.now)
+
 def init_db():
-  conn = sqlite3.connect(DATABASE_NAME)
-  cursor = conn.cursor()
-
-  # Define the SQL query to create the "houses" table
-  create_table_query = """
-  CREATE TABLE IF NOT EXISTS houses (
-      uuid TEXT PRIMARY KEY,
-      url TEXT,
-      title TEXT,
-      location TEXT,
-      m2 INT,
-      city TEXT,
-      price FLOAT,
-      comment TEXT,
-      source TEXT,
-      created_at TIMESTAMP,
-      updated_at TIMESTAMP
-  );
-  """
-
-  cursor.execute(create_table_query)
-  return cursor
+    engine = create_engine(f'sqlite:///{DATABASE_NAME}', echo=True)  # Use 'echo=True' for debugging
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    return Session()
 
 def upsert_house_record(uuid, url, title, location, comment, m2, source, price, city):
-    # Connect to the SQLite database
-    conn = sqlite3.connect(DATABASE_NAME)
-    cursor = conn.cursor()
+    engine = create_engine(f'sqlite:///{DATABASE_NAME}')
+    Session = sessionmaker(bind=engine)  # Create a session
+    session = Session()
 
-    # Check if a record with the given UUID already exists
-    cursor.execute("SELECT created_at FROM houses WHERE uuid = ?", (uuid,))
-    existing_record = cursor.fetchone()
+    try:
+        # Check if a record with the given UUID already exists
+        existing_record = session.query(House).filter_by(uuid=uuid).first()
 
-    if existing_record:
-        # If the record exists, preserve its 'created_at' timestamp
-        created_at = existing_record[0]
-    else:
-        # If the record doesn't exist, set 'created_at' to the current timestamp
-        created_at = datetime.now()
+        if existing_record:
+            # If the record exists, update its attributes
+            existing_record.url = url
+            existing_record.title = title
+            existing_record.location = location
+            existing_record.comment = comment
+            existing_record.m2 = m2
+            existing_record.source = source
+            existing_record.price = price
+            existing_record.city = city
+        else:
+            # If the record doesn't exist, create a new one
+            new_record = House(
+                uuid=uuid,
+                url=url,
+                title=title,
+                location=location,
+                comment=comment,
+                m2=m2,
+                source=source,
+                price=price,
+                city=city
+            )
+            session.add(new_record)
+        
+        session.commit()
 
-    # Define the SQL query for the upsert operation
-    upsert_query = """
-    INSERT OR REPLACE INTO houses (uuid, url, title, location, comment, m2, source, price, city, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """
-
-    # Get the current timestamp for 'updated_at'
-    updated_at = datetime.now()
-
-    # Execute the upsert query with the provided values
-    cursor.execute(upsert_query, (uuid, url, title, location, comment, m2, source, price, city, created_at, updated_at))
-
-    # Commit the changes and close the database connection
-    conn.commit()
-    conn.close()
-
+    finally:
+        session.close()  # Close the session
