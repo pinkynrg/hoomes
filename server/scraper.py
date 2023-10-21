@@ -5,7 +5,7 @@ import concurrent.futures
 from functools import partial
 import re
 from geo_data import provinces_by_regions
-import time
+import multiprocessing
 
 class Idealista: 
 
@@ -58,14 +58,14 @@ class Idealista:
         m2 = m2,
         source = 'idealista',
         price = price,
-        province = province, 
+        province = metadata['province'], 
         region = metadata['region'], 
       )
 
-      print("data {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
+      print("SUCCESS fetching data @ {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
 
     except Exception as e:
-      print("something went wrong fetching/storing comment @ {}: {}".format(page_link, e))
+      print("ERROR fetching data @ {}: {}".format(page_link, e))
 
   def get_filters_part(
       min_price = None, 
@@ -87,7 +87,7 @@ class Idealista:
     filtered = [e for e in result if e is not None]
     return "con-" + ",".join(filtered) + "/" if len(filtered) else None
 
-  def fetch_links( 
+  def fetch( 
       metadata,
       province, 
       min_price = 1,
@@ -96,8 +96,6 @@ class Idealista:
       max_size = 500,
       **kwargs,
     ):
-    
-    next_page = 1
 
     def get_final_url(page):
 
@@ -114,17 +112,16 @@ class Idealista:
         page = page,
         filters=filters or "", 
       )
-
+    
+    next_page = 1
     page_link = get_final_url(next_page)
-    print("debug {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
-
     total_houses = Idealista.get_total_houses(page_link)
 
     # max pages offered by Idealista is 60 x 30
     if (total_houses and total_houses > 60 * 30):
       if max_price - min_price > 1:
         mid_price = min_price+int((max_price-min_price)/2)
-        Idealista.fetch_links(
+        Idealista.fetch(
           metadata=metadata, 
           province=province, 
           min_price=min_price, 
@@ -133,7 +130,7 @@ class Idealista:
           max_size=max_size, 
           **kwargs
         )
-        Idealista.fetch_links(
+        Idealista.fetch(
           metadata=metadata, 
           province=province, 
           min_price=mid_price, 
@@ -145,7 +142,7 @@ class Idealista:
       else:
         if max_size - min_size > 1:
           mid_size = min_size+int((max_size-min_size)/2)
-          Idealista.fetch_links(
+          Idealista.fetch(
             metadata=metadata, 
             province=province, 
             min_price=min_price, 
@@ -154,7 +151,7 @@ class Idealista:
             max_size=mid_size, 
             **kwargs
           )
-          Idealista.fetch_links(
+          Idealista.fetch(
             metadata, 
             province=province, 
             min_price=min_price, 
@@ -166,9 +163,9 @@ class Idealista:
         else:
           return
     else:
+      print(f"EXECUTING {metadata['region']} -> {province} for {total_houses}")
       while True: 
         page_link = get_final_url(next_page)
-        print("links: {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
         html_text = get(Idealista.HOST, page_link)
         html_tree = BeautifulSoup(html_text, "html.parser")
         item_container = html_tree.find("section", attrs={"class": "items-list"})
@@ -184,25 +181,32 @@ class Idealista:
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
           executor.map(get_house_data_with_meta, links)
         next_page = Idealista.get_next_page(html_tree)
-        if next_page: 
-          print("next page: {}".format(next_page))
-        else:
-          print("next page is invalid")
+        if not next_page: 
           break
 
-for provinces_by_region in provinces_by_regions: 
-  for province in provinces_by_region['provinces']: 
-    Idealista.fetch_links(
-      province=province,
-      # min_price=300999,
-      # max_price=300000,
-      # custom_path="/point/vendita-case/9/{filters}lista-{page}?ordine=pubblicazione-desc&shape=%28%28%7B%7CntGwhknA%3F%7Cpp%5B%7CfiI%3F%3F%7Dpp%5B%7DfiI%3F%29%29",
-      # min_size=250,
-      # max_size=500,
-      # ariacondizionata=True,
-      # ascensori=True,
-      metadata={
-        "region": provinces_by_region['region'],
-        "province": province
-      }
+def fetch_for_province(province, region):
+    Idealista.fetch(
+        province=province,
+        metadata={
+            "region": region,
+            "province": province
+        }
     )
+
+if __name__ == '__main__':
+  # Create a multiprocessing pool with the desired number of processes
+  # Adjust the number of processes based on your system's CPU capabilities
+  num_processes = 3
+  pool = multiprocessing.Pool(processes=num_processes)
+
+  print(f"EXECUTING scrape with {num_processes} processes")
+
+  # Create a list of arguments for each province
+  province_args = [(province, provinces_by_region['region']) for provinces_by_region in provinces_by_regions for province in provinces_by_region['provinces']]
+
+  # Use the pool to execute the fetch_for_province function for each argument
+  pool.starmap(fetch_for_province, province_args)
+
+  # Close and join the pool to ensure all processes are completed
+  pool.close()
+  pool.join()
