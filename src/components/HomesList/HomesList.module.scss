@@ -1,0 +1,55 @@
+.Container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.Filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  * {
+    flex: 1;
+  }
+}
+
+.List {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.Row {
+  display: table-row;
+  background-color: #f0f0f0; 
+}
+
+.Image {
+  img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+  }
+}
+
+.Image,
+.Match,
+.Location,
+.Title,
+.Price,
+.M2 {
+  display: table-cell;
+  text-align: center;
+  border: 1px solid #ccc; 
+  vertical-align: middle;
+}
+
+.Image {
+  width: 100px;
+}
+
+.Text {
+  text-align: center;
+  padding: 10px;
+}

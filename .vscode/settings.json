@@ -1,0 +1,15 @@
+{
+  "javascript.validate.enable": false,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.associations": {
+    "yarn.lock": "yaml",
+    ".eslintrc": "json"
+  },
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll.stylelint": true 
+  },
+  "editor.tabSize": 2,
+  "stylelint.validate": ["css", "scss"]
+}

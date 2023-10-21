@@ -1,12 +1,11 @@
 from utils import get
 from bs4 import BeautifulSoup
-from db import init_db, upsert_house_record
+from db import upsert_house_record
 import concurrent.futures
 from functools import partial
 import re
+from geo_data import provinces_by_regions
 import time
-
-cursor = init_db()
 
 class Idealista: 
 
@@ -14,8 +13,8 @@ class Idealista:
   HOST = "www.idealista.it"
 
 
-  def format_name(city):
-    return city.replace(' ', '-').lower()
+  def format_name(name):
+    return name.replace(' ', '-').replace('\'', '-').lower()
   
   def get_next_page(html_tree):
     anchor = html_tree.find("a", attrs={"class": "icon-arrow-right-after"})
@@ -36,7 +35,7 @@ class Idealista:
           extracted_integer = int(extracted_number)
           return extracted_integer
 
-  def get_house_data(city, page_link):
+  def get_house_data(metadata, page_link):
     try:
       html_text = get(Idealista.HOST, page_link)
       soup = BeautifulSoup(html_text, "html.parser")
@@ -45,19 +44,22 @@ class Idealista:
       title = soup.find("span", attrs={"class": "main-info__title-main"}).contents[0]
       location = soup.find("span", attrs={"class": "main-info__title-minor"}).contents[0]
       comment = soup.find("div", attrs={"class": "comment"}).find("div").find("p").contents[0]
-      m2_string = soup.find('div', class_='info-features').find('span').contents[0]
+      m2_string = soup.find('div', attrs={"class": "info-features"}).find('span').contents[0]
       m2 = int(re.search(r'\d+', m2_string).group())
+      image = soup.find('div', attrs={"class": "main-image_first"}).find("img")
 
       upsert_house_record(
         uuid = page_link, 
         url = Idealista.PROTOCOL + Idealista.HOST + page_link, 
+        image = image["src"], 
         title = title,
         location = location,
         comment = comment, 
         m2 = m2,
         source = 'idealista',
         price = price,
-        city = city, 
+        province = province, 
+        region = metadata['region'], 
       )
 
       print("data {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
@@ -86,9 +88,8 @@ class Idealista:
     return "con-" + ",".join(filtered) + "/" if len(filtered) else None
 
   def fetch_links( 
-      custom_path = None,
-      city = None, 
-      sub_category = 'provincia',
+      metadata,
+      province, 
       min_price = 1,
       max_price = 1000000,
       min_size = 1,
@@ -108,21 +109,11 @@ class Idealista:
         **kwargs
       )
       
-      if custom_path:
-        return custom_path.format(
-          page = page, 
-          filters=filters or "", 
-
-        )
-      elif city:
-        return "/vendita-case/{city}-{sub_category}/{filters}lista-{page}.htm?ordine=pubblicazione-desc".format(
-          city=Idealista.format_name(city),
-          sub_category=Idealista.format_name(sub_category),
-          page = page,
-          filters=filters or "", 
-        )
-      else: 
-        print("insert at least city or custom_path")
+      return "/vendita-case/{province}-provincia/{filters}lista-{page}.htm?ordine=pubblicazione-desc".format(
+        province=Idealista.format_name(province),
+        page = page,
+        filters=filters or "", 
+      )
 
     page_link = get_final_url(next_page)
     print("debug {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
@@ -133,13 +124,45 @@ class Idealista:
     if (total_houses and total_houses > 60 * 30):
       if max_price - min_price > 1:
         mid_price = min_price+int((max_price-min_price)/2)
-        Idealista.fetch_links(custom_path=custom_path, city=city, sub_category=sub_category, min_price=min_price, max_price=mid_price, min_size=min_size, max_size=max_size, **kwargs)
-        Idealista.fetch_links(custom_path=custom_path, city=city, sub_category=sub_category, min_price=mid_price, max_price=max_price, min_size=min_size, max_size=max_size, **kwargs)
+        Idealista.fetch_links(
+          metadata=metadata, 
+          province=province, 
+          min_price=min_price, 
+          max_price=mid_price, 
+          min_size=min_size, 
+          max_size=max_size, 
+          **kwargs
+        )
+        Idealista.fetch_links(
+          metadata=metadata, 
+          province=province, 
+          min_price=mid_price, 
+          max_price=max_price, 
+          min_size=min_size, 
+          max_size=max_size, 
+          **kwargs
+        )
       else:
         if max_size - min_size > 1:
           mid_size = min_size+int((max_size-min_size)/2)
-          Idealista.fetch_links(custom_path=custom_path, city=city, sub_category=sub_category, min_price=min_price, max_price=max_price, min_size=min_size, max_size=mid_size, **kwargs)
-          Idealista.fetch_links(custom_path=custom_path, city=city, sub_category=sub_category, min_price=min_price, max_price=max_price, min_size=mid_size, max_size=max_size, **kwargs)
+          Idealista.fetch_links(
+            metadata=metadata, 
+            province=province, 
+            min_price=min_price, 
+            max_price=max_price, 
+            min_size=min_size, 
+            max_size=mid_size, 
+            **kwargs
+          )
+          Idealista.fetch_links(
+            metadata, 
+            province=province, 
+            min_price=min_price, 
+            max_price=max_price, 
+            min_size=mid_size, 
+            max_size=max_size, 
+            **kwargs
+          )
         else:
           return
     else:
@@ -153,10 +176,13 @@ class Idealista:
         links = [item.find("a", href=True, attrs={"class": "item-link"})["href"] for item in items_list]
         
         # Create a new function that takes both fixed_param and link
-        get_house_data_with_city = partial(Idealista.get_house_data, custom_path or city)
+        get_house_data_with_meta = partial(
+          Idealista.get_house_data, 
+          metadata,
+        )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
-          executor.map(get_house_data_with_city, links)
+          executor.map(get_house_data_with_meta, links)
         next_page = Idealista.get_next_page(html_tree)
         if next_page: 
           print("next page: {}".format(next_page))
@@ -164,32 +190,19 @@ class Idealista:
           print("next page is invalid")
           break
 
-        
-
-# Record the start time
-# start_time = time.time()
-cities = [
-#   "Modena",
-#   "Parma",
-  "Reggio Emilia",
-#   "Cremona",
-]
-
-for city in cities: 
-  Idealista.fetch_links(
-    city=city,
-    # min_price=64999,
-    # max_price=300000,
-    # custom_path="/point/vendita-case/9/{filters}lista-{page}?ordine=pubblicazione-desc&shape=%28%28%7B%7CntGwhknA%3F%7Cpp%5B%7CfiI%3F%3F%7Dpp%5B%7DfiI%3F%29%29",
-    # min_size=250,
-    # max_size=500,
-    # ariacondizionata=True,
-    # ascensori=True,
-  )
-
-# # Record the end time
-# end_time = time.time()
-
-# # Calculate the elapsed time
-# elapsed_time = end_time - start_time
-# print(f"Elapsed time: {elapsed_time} seconds")
+for provinces_by_region in provinces_by_regions: 
+  for province in provinces_by_region['provinces']: 
+    Idealista.fetch_links(
+      province=province,
+      # min_price=300999,
+      # max_price=300000,
+      # custom_path="/point/vendita-case/9/{filters}lista-{page}?ordine=pubblicazione-desc&shape=%28%28%7B%7CntGwhknA%3F%7Cpp%5B%7CfiI%3F%3F%7Dpp%5B%7DfiI%3F%29%29",
+      # min_size=250,
+      # max_size=500,
+      # ariacondizionata=True,
+      # ascensori=True,
+      metadata={
+        "region": provinces_by_region['region'],
+        "province": province
+      }
+    )
