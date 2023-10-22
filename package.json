@@ -59,7 +59,8 @@
     "start-frontend": "react-scripts start",
     "start-backend": "cd server && poetry run python server.py && cd ..",
     "scrape": "cd server && poetry run python scraper.py && cd ..",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "component": "node scripts/generateComponent.ts"
   },
   "eslintConfig": {
     "extends": [

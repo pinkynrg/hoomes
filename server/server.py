@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from functools import reduce
 import operator
 from peewee import fn
 from db import House
 from utils import calculate_match_percentage, remove_non_letters_and_split
+import http.client
 
 app = Flask(__name__)
 
@@ -146,6 +147,50 @@ def get_houses():
     limited_houses_list = houses_list[offset:offset + page_size]
 
     return jsonify(limited_houses_list)
+
+@app.route('/v1/proxy', methods=['GET'])
+def proxy_url():
+    url = request.args.get('url')  # Get the URL from the query parameter
+
+    if not url:
+        return jsonify({'error': 'URL parameter is missing'}), 400
+
+    try:
+        # Parse the URL to get the hostname and path
+        url_parts = url.split('/', 3)
+        if len(url_parts) < 3:
+            return jsonify({'error': 'Invalid URL'}), 400
+
+        hostname = url_parts[2]
+        path = '/' + url_parts[3]
+
+        # Establish a connection to the remote server
+        connection = http.client.HTTPSConnection(hostname)
+
+        headers = {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9,it;q=0.8',
+        }
+
+        # Send an HTTP GET request to the provided URL
+        connection.request('GET', path, {}, headers)
+
+        response = connection.getresponse()
+
+        # Check if the request was successful
+        if response.status == 200:
+            # Set the response content type to HTML
+            headers = {'Content-Type': 'text/html; charset=UTF-8'}
+
+            # Return the HTML content from the remote server as a response to the client
+            return Response(response.read(), headers=headers)
+        else:
+            return jsonify({'error': 'Failed to fetch URL'}), 500
+    except Exception as e:
+        return jsonify({'error': 'Request error'}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 if __name__ == '__main__':
     app.run(debug=True)

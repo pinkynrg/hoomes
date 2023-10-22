@@ -2,13 +2,16 @@ import { useQuery } from 'react-query';
 import { Home } from '../../types';
 import style from './HomesList.module.scss';
 import { useEffect, useState } from 'react';
-import { percentage } from '../../utils';
-import classnames from 'classnames'
 import { useDebouncedCallback } from 'use-debounce'
 import { Input, Select } from 'antd';
 import axios from 'axios';
+import { HomeElement } from '../HomeElement/HomeElement';
 
-const HomesList = () => {
+interface HomesListProps {
+  onPreview: (url: string) => void
+}
+
+const HomesList = ({ onPreview }: HomesListProps) => {
   const [search, setSearch] = useState('')
   const [region, setRegion] = useState<string | undefined>('')
   const [province, setProvince] = useState<string | undefined>('')
@@ -176,15 +179,15 @@ const HomesList = () => {
             placeholder='max price'
             onChange={onMaxPrice}
           />
-          <Input 
+          {/* <Input 
             placeholder='min size'
             onChange={onMinSize}
           />
           <Input 
             placeholder='max size'
             onChange={onMaxSize}
-          />
-          <Select
+          /> */}
+          {/* <Select
             allowClear
             placeholder={`select region [${regions.length}]`}
             disabled={regionsAreLoading}
@@ -192,7 +195,7 @@ const HomesList = () => {
             options={regions.map((region) => ({value: region, label: region}))}
             showSearch
             filterOption={(input, option) => (option?.label.toLowerCase() ?? '').includes(input.toLowerCase())}
-          />
+          /> */}
           <Select
             allowClear
             placeholder={`select province [${provinces.length}]`}
@@ -202,7 +205,7 @@ const HomesList = () => {
             showSearch
             filterOption={(input, option) => (option?.label.toLowerCase() ?? '').includes(input.toLowerCase())}
           />
-          <Select
+          {/* <Select
             allowClear
             placeholder={`select location [${locations.length}]`}
             disabled={locationsAreLoading}
@@ -210,20 +213,11 @@ const HomesList = () => {
             options={locations.map((location) => ({value: location, label: location}))}
             showSearch
             filterOption={(input, option) => (option?.label.toLowerCase() ?? '').includes(input.toLowerCase())}
-          />
+          /> */}
         </div>
         <div className={style.List}>
-            {houses.map((house) => (
-              <div className={style.Row} key={house.uuid}>
-                <span className={style.Image}> <img src={house.image} alt="main_image"/> </span>
-                <span className={classnames(style.Match, style.Text)}> {percentage(house.match)} </span>
-                <span className={classnames(style.Title, style.Text)}> <a href={house.url} target="_blank" rel="noreferrer"> {house.title} </a> </span>
-                <span className={classnames(style.Location, style.Text)}> {house.region} </span>
-                <span className={classnames(style.Location, style.Text)}> {house.province} </span>
-                <span className={classnames(style.Location, style.Text)}> {house.location} </span>
-                <span className={classnames(style.Price, style.Text)}> {house.price} Euro </span>
-                <span className={classnames(style.M2, style.Text)}> {house.m2} m2</span>
-              </div>
+            {houses.map((home) => (
+              <HomeElement key={home.uuid} home={home} onPreview={onPreview}/>
             ))}
         </div>
       </div>
