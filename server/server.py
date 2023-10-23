@@ -1,12 +1,16 @@
 from flask import Flask, jsonify, request, Response
+from rq import Queue, get_current_job
 from functools import reduce
 import operator
 from peewee import fn
 from db import House
 from utils import calculate_match_percentage, remove_non_letters_and_split
 import http.client
+from scraper import Idealista 
+from worker import conn
 
 app = Flask(__name__)
+q = Queue(connection=conn, default_timeout=3600)
 
 # Route to get unique regions from the database
 @app.route('/v1/regions', methods=['GET'])
@@ -188,6 +192,32 @@ def proxy_url():
             return jsonify({'error': 'Failed to fetch URL'}), 500
     except Exception as e:
         return jsonify({'error': 'Request error'}), 500
+    
+@app.route('/v1/request', methods=['POST'])
+def initiate_job():
+    city = request.json.get('city')
+    email = request.json.get('email')
+
+    # Enqueue the background job
+    job = q.enqueue(Idealista.fetch, city)
+
+    # Respond with a message indicating the job has been accepted
+    response_message = {
+        'message': 'Your job has been accepted. We will notify you when it has finished processing.',
+        'job_id': job.get_id()  # Provide the job ID for checking status
+    }
+    return jsonify(response_message), 200
+    
+@app.route('/v1/jobs/<job_id>', methods=['GET'])
+def check_job_status(job_id):
+    # Use RQ's get_current_job to retrieve the job by ID
+    job = q.fetch_job(job_id)
+
+    if job is None:
+        return jsonify({'status': 'Job not found'}), 404
+
+    # Check the status of the job
+    return jsonify({'status': 'Job {}'.format(job.get_status()), 'result': job.result}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

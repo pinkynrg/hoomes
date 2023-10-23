@@ -1,11 +1,36 @@
 from utils import get
 from bs4 import BeautifulSoup
-from db import upsert_house_record
+from db import upsert_record, House, Location
 import concurrent.futures
 from functools import partial
+import json
 import re
-from geo_data import provinces_by_regions
-import multiprocessing
+# import multiprocessing
+
+class ComuniItalia: 
+  HOST = "raw.githubusercontent.com"
+
+  def fetch():
+    html_text = get(ComuniItalia.HOST, "matteocontrini/comuni-json/master/comuni.json")
+    json_string = html_text
+    data = json.loads(json_string)
+    for comune in data:
+      upsert_record(
+          Location,
+          'codice',
+          nome=comune.get('nome', ''),
+          codice=comune.get('codice', ''),
+          zona_codice=comune['zona']['codice'] if 'zona' in comune else None,
+          zona_nome=comune['zona']['nome'] if 'zona' in comune else None,
+          regione_codice=comune['regione']['codice'] if 'regione' in comune else None,
+          regione_nome=comune['regione']['nome'] if 'regione' in comune else None,
+          provincia_codice=comune['provincia']['codice'] if 'provincia' in comune else None,
+          provincia_nome=comune['provincia']['nome'] if 'provincia' in comune else None,
+          sigla=comune.get('sigla', ''),
+          codiceCatastale=comune.get('codiceCatastale', ''),
+          cap=comune['cap'] if 'cap' in comune else None,
+          popolazione=comune.get('popolazione', 0)
+      )      
 
 class Idealista: 
 
@@ -35,7 +60,7 @@ class Idealista:
           extracted_integer = int(extracted_number)
           return extracted_integer
 
-  def get_house_data(metadata, page_link):
+  def get_house_data(comune, page_link):
     try:
       html_text = get(Idealista.HOST, page_link)
       soup = BeautifulSoup(html_text, "html.parser")
@@ -48,7 +73,9 @@ class Idealista:
       m2 = int(re.search(r'\d+', m2_string).group())
       image = soup.find('div', attrs={"class": "main-image_first"}).find("img")
 
-      upsert_house_record(
+      upsert_record(
+        House,
+        'uuid',
         uuid = page_link, 
         url = Idealista.PROTOCOL + Idealista.HOST + page_link, 
         image = image["src"], 
@@ -58,8 +85,7 @@ class Idealista:
         m2 = m2,
         source = 'idealista',
         price = price,
-        province = metadata['province'], 
-        region = metadata['region'], 
+        comune = comune, 
       )
 
       print("SUCCESS fetching data @ {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
@@ -86,16 +112,23 @@ class Idealista:
 
     filtered = [e for e in result if e is not None]
     return "con-" + ",".join(filtered) + "/" if len(filtered) else None
+  
+  def get_provincia(nome):
+    location = Location.get(nome=nome)
+    return location.provincia_nome
 
   def fetch( 
-      metadata,
-      province, 
+      comune, 
       min_price = 1,
       max_price = 1000000,
       min_size = 1,
       max_size = 500,
       **kwargs,
     ):
+
+
+    # TOFIX
+    province = Idealista.get_provincia(comune)
 
     def get_final_url(page):
 
@@ -107,7 +140,8 @@ class Idealista:
         **kwargs
       )
       
-      return "/vendita-case/{province}-provincia/{filters}lista-{page}.htm?ordine=pubblicazione-desc".format(
+      return "/vendita-case/{comune}-{province}/{filters}lista-{page}.htm?ordine=pubblicazione-desc".format(
+        comune=Idealista.format_name(comune),
         province=Idealista.format_name(province),
         page = page,
         filters=filters or "", 
@@ -122,8 +156,7 @@ class Idealista:
       if max_price - min_price > 1:
         mid_price = min_price+int((max_price-min_price)/2)
         Idealista.fetch(
-          metadata=metadata, 
-          province=province, 
+          comune=comune, 
           min_price=min_price, 
           max_price=mid_price, 
           min_size=min_size, 
@@ -131,8 +164,7 @@ class Idealista:
           **kwargs
         )
         Idealista.fetch(
-          metadata=metadata, 
-          province=province, 
+          comune=comune, 
           min_price=mid_price, 
           max_price=max_price, 
           min_size=min_size, 
@@ -143,8 +175,7 @@ class Idealista:
         if max_size - min_size > 1:
           mid_size = min_size+int((max_size-min_size)/2)
           Idealista.fetch(
-            metadata=metadata, 
-            province=province, 
+            comune=comune, 
             min_price=min_price, 
             max_price=max_price, 
             min_size=min_size, 
@@ -152,8 +183,7 @@ class Idealista:
             **kwargs
           )
           Idealista.fetch(
-            metadata, 
-            province=province, 
+            comune=comune, 
             min_price=min_price, 
             max_price=max_price, 
             min_size=mid_size, 
@@ -163,7 +193,6 @@ class Idealista:
         else:
           return
     else:
-      print(f"EXECUTING {metadata['region']} -> {province} for {total_houses}")
       while True: 
         page_link = get_final_url(next_page)
         html_text = get(Idealista.HOST, page_link)
@@ -175,7 +204,7 @@ class Idealista:
         # Create a new function that takes both fixed_param and link
         get_house_data_with_meta = partial(
           Idealista.get_house_data, 
-          metadata,
+          comune,
         )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
@@ -183,30 +212,3 @@ class Idealista:
         next_page = Idealista.get_next_page(html_tree)
         if not next_page: 
           break
-
-def fetch_for_province(province, region):
-    Idealista.fetch(
-        province=province,
-        metadata={
-            "region": region,
-            "province": province
-        }
-    )
-
-if __name__ == '__main__':
-  # Create a multiprocessing pool with the desired number of processes
-  # Adjust the number of processes based on your system's CPU capabilities
-  num_processes = 5
-  pool = multiprocessing.Pool(processes=num_processes)
-
-  print(f"EXECUTING scrape with {num_processes} processes")
-
-  # Create a list of arguments for each province
-  province_args = [(province, provinces_by_region['region']) for provinces_by_region in provinces_by_regions for province in provinces_by_region['provinces']]
-
-  # Use the pool to execute the fetch_for_province function for each argument
-  pool.starmap(fetch_for_province, province_args)
-
-  # Close and join the pool to ensure all processes are completed
-  pool.close()
-  pool.join()

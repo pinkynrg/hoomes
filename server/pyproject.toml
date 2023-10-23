@@ -11,6 +11,7 @@ beautifulsoup4 = "^4.12.2"
 flask = "^3.0.0"
 peewee = "^3.17.0"
 psycopg2 = "^2.9.9"
+rq = "^1.15.1"
 
 
 [build-system]

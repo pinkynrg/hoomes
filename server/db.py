@@ -1,21 +1,40 @@
 from datetime import datetime
-from peewee import Model, TextField, CharField, FloatField, IntegerField, SqliteDatabase, DateTimeField, PostgresqlDatabase
+from peewee import Model, TextField, CharField, FloatField, IntegerField, SqliteDatabase, DateTimeField
+# PostgresqlDatabase, 
 
-# DATABASE_NAME = 'data.db'
+DATABASE_NAME = 'data.db'
 
 # Initialize the SQLite database connection
-# db = SqliteDatabase(DATABASE_NAME)
+db = SqliteDatabase(DATABASE_NAME)
 
 
 # Specify the PostgreSQL connection details
-DATABASE_NAME = 'hoomes'  # Name of the database
-USER = 'postgres'  # Your PostgreSQL username
-PASSWORD = ''  # Your PostgreSQL password
-HOST = 'localhost'  # Hostname or IP address of the PostgreSQL server
-PORT = 5432  # PostgreSQL port (default is 5432)
+# DATABASE_NAME = 'hoomes'  # Name of the database
+# USER = 'postgres'  # Your PostgreSQL username
+# PASSWORD = ''  # Your PostgreSQL password
+# HOST = 'localhost'  # Hostname or IP address of the PostgreSQL server
+# PORT = 5432  # PostgreSQL port (default is 5432)
 
 # Initialize the PostgreSQL database connection
-db = PostgresqlDatabase(DATABASE_NAME, user=USER, password=PASSWORD, host=HOST, port=PORT)
+# db = PostgresqlDatabase(DATABASE_NAME, user=USER, password=PASSWORD, host=HOST, port=PORT)
+
+class Location(Model):
+    codice = CharField(primary_key=True)
+    nome = CharField()    
+    zona_codice = CharField()
+    zona_nome = CharField()
+    regione_codice = CharField()
+    regione_nome = CharField()
+    provincia_codice = CharField()
+    provincia_nome = CharField()
+    sigla = CharField()
+    codiceCatastale = CharField()
+    cap = CharField()
+    popolazione = IntegerField()
+
+    class Meta:
+        database = db
+        table_name = 'locations'
 
 class House(Model):
     uuid = CharField(primary_key=True)
@@ -24,8 +43,7 @@ class House(Model):
     title = CharField()
     location = CharField()
     m2 = IntegerField()
-    province = CharField()
-    region = CharField()
+    comune = CharField()
     price = FloatField()
     comment = TextField()
     source = CharField()
@@ -40,43 +58,24 @@ class House(Model):
 db.connect()
 
 # Create tables if they don't exist
-db.create_tables([House], safe=True)
+db.create_tables([Location,House], safe=True)
 
-def upsert_house_record(uuid, url, image, title, location, comment, m2, source, price, province, region):
+def upsert_record(model_class, unique_field, **kwargs):
     try:
-        # Try to find a record with the given UUID
-        existing_record = House.get_or_none(uuid=uuid)
+        # Try to find a record with the given unique field value
+        existing_record = model_class.get_or_none(**{unique_field: kwargs.get(unique_field)})
 
         if existing_record:
             # If the record exists, update its attributes
-            existing_record.url = url
-            existing_record.image = image
-            existing_record.title = title
-            existing_record.location = location
-            existing_record.comment = comment
-            existing_record.m2 = m2
-            existing_record.source = source
-            existing_record.price = price
-            existing_record.province = province
-            existing_record.region = region
-            existing_record.updated_at = datetime.now()  # Update the 'updated_at' field
+            for field, value in kwargs.items():
+                if field != unique_field:
+                    setattr(existing_record, field, value)
 
+            existing_record.updated_at = datetime.now()  # Update the 'updated_at' field
             existing_record.save()
         else:
             # If the record doesn't exist, create a new one
-            House.create(
-                uuid=uuid,
-                url=url,
-                image=image,
-                title=title,
-                location=location,
-                comment=comment,
-                m2=m2,
-                source=source,
-                price=price,
-                province=province,
-                region=region,
-            )
+            model_class.create(**kwargs)
     except Exception as e:
         print("Error:", e)
     finally:

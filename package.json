@@ -52,12 +52,13 @@
     "xcase": "^2.0.1"
   },
   "scripts": {
-    "start": "concurrently --names 'frontend, backend' -c 'bgBlue.bold,bgMagenta.bold' \"npm run start-frontend\" \"npm run start-backend\"",
+    "start": "concurrently --names 'frontend, backend, workers' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run start-frontend\" \"npm run start-backend\"  \"npm run start-workers\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start-frontend": "react-scripts start",
     "start-backend": "cd server && poetry run python server.py && cd ..",
+    "start-workers": "cd server && poetry run python worker.py && cd ..",
     "scrape": "cd server && poetry run python scraper.py && cd ..",
     "lint": "eslint .",
     "component": "node scripts/generateComponent.ts"
