@@ -196,7 +196,7 @@ def fetch_for_province(province, region):
 if __name__ == '__main__':
   # Create a multiprocessing pool with the desired number of processes
   # Adjust the number of processes based on your system's CPU capabilities
-  num_processes = 3
+  num_processes = 5
   pool = multiprocessing.Pool(processes=num_processes)
 
   print(f"EXECUTING scrape with {num_processes} processes")
