@@ -6,10 +6,11 @@ from peewee import fn
 from db import House
 from utils import calculate_match_percentage, remove_non_letters_and_split
 import http.client
-from scraper import Idealista 
 from worker import conn
+from jobs import fetch_data
 
 app = Flask(__name__)
+
 q = Queue(connection=conn, default_timeout=3600)
 
 # Route to get unique regions from the database
@@ -198,8 +199,8 @@ def initiate_job():
     city = request.json.get('city')
     email = request.json.get('email')
 
-    # Enqueue the background job
-    job = q.enqueue(Idealista.fetch, city)
+    # Enqueue the scrape job
+    job = q.enqueue(fetch_data, email, city)
 
     # Respond with a message indicating the job has been accepted
     response_message = {
@@ -217,7 +218,10 @@ def check_job_status(job_id):
         return jsonify({'status': 'Job not found'}), 404
 
     # Check the status of the job
-    return jsonify({'status': 'Job {}'.format(job.get_status()), 'result': job.result}), 200
+    return jsonify({
+        'status': 'Job {}'.format(job.get_status()), 
+        'result': job.result
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

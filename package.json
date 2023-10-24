@@ -61,7 +61,9 @@
     "start-workers": "cd server && poetry run python worker.py && cd ..",
     "scrape": "cd server && poetry run python scraper.py && cd ..",
     "lint": "eslint .",
-    "component": "node scripts/generateComponent.ts"
+    "component": "node scripts/generateComponent.ts",
+    "ionic:build": "npm run build",
+    "ionic:serve": "npm run start"
   },
   "eslintConfig": {
     "extends": [

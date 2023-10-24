@@ -1,6 +1,6 @@
 from utils import get
 from bs4 import BeautifulSoup
-from db import upsert_record, House, Location
+from db import upsert_record, Location
 import concurrent.futures
 from functools import partial
 import json
@@ -10,6 +10,11 @@ import re
 class ComuniItalia: 
   HOST = "raw.githubusercontent.com"
 
+  def trasform_city_name(name):
+    if name == "Reggio nell'Emilia":
+      return "Reggio Emilia"
+    return name
+
   def fetch():
     html_text = get(ComuniItalia.HOST, "matteocontrini/comuni-json/master/comuni.json")
     json_string = html_text
@@ -18,14 +23,14 @@ class ComuniItalia:
       upsert_record(
           Location,
           'codice',
-          nome=comune.get('nome', ''),
+          nome=ComuniItalia.trasform_city_name(comune.get('nome', '')),
           codice=comune.get('codice', ''),
           zona_codice=comune['zona']['codice'] if 'zona' in comune else None,
           zona_nome=comune['zona']['nome'] if 'zona' in comune else None,
           regione_codice=comune['regione']['codice'] if 'regione' in comune else None,
           regione_nome=comune['regione']['nome'] if 'regione' in comune else None,
           provincia_codice=comune['provincia']['codice'] if 'provincia' in comune else None,
-          provincia_nome=comune['provincia']['nome'] if 'provincia' in comune else None,
+          provincia_nome=ComuniItalia.trasform_city_name(comune['provincia']['nome'] if 'provincia' in comune else None),
           sigla=comune.get('sigla', ''),
           codiceCatastale=comune.get('codiceCatastale', ''),
           cap=comune['cap'] if 'cap' in comune else None,
@@ -36,6 +41,7 @@ class Idealista:
 
   PROTOCOL = "https://"
   HOST = "www.idealista.it"
+  data = []
 
 
   def format_name(name):
@@ -65,30 +71,26 @@ class Idealista:
       html_text = get(Idealista.HOST, page_link)
       soup = BeautifulSoup(html_text, "html.parser")
 
-      price = soup.find("span", attrs={"class": "info-data-price"}).find("span").contents[0].replace(".", "")
-      title = soup.find("span", attrs={"class": "main-info__title-main"}).contents[0]
-      location = soup.find("span", attrs={"class": "main-info__title-minor"}).contents[0]
-      comment = soup.find("div", attrs={"class": "comment"}).find("div").find("p").contents[0]
-      m2_string = soup.find('div', attrs={"class": "info-features"}).find('span').contents[0]
+      price = soup.find("span", attrs={"class": "info-data-price"}).find("span").text.replace(".", "")
+      title = soup.find("span", attrs={"class": "main-info__title-main"}).text
+      location = soup.find("span", attrs={"class": "main-info__title-minor"}).text
+      comment = soup.find("div", attrs={"class": "comment"}).find("div").find("p").text
+      m2_string = soup.find('div', attrs={"class": "info-features"}).find('span').text
       m2 = int(re.search(r'\d+', m2_string).group())
       image = soup.find('div', attrs={"class": "main-image_first"}).find("img")
 
-      upsert_record(
-        House,
-        'uuid',
-        uuid = page_link, 
-        url = Idealista.PROTOCOL + Idealista.HOST + page_link, 
-        image = image["src"], 
-        title = title,
-        location = location,
-        comment = comment, 
-        m2 = m2,
-        source = 'idealista',
-        price = price,
-        comune = comune, 
-      )
-
-      print("SUCCESS fetching data @ {}".format(Idealista.PROTOCOL + Idealista.HOST + page_link))
+      return {
+        "uuid": page_link, 
+        "url": Idealista.PROTOCOL + Idealista.HOST + page_link, 
+        "image": image["src"],
+        "m2": m2,
+        "source": 'idealista',
+        "price": price,
+        "comune": comune, 
+        "title": title,
+        "location": location,
+        "comment": comment, 
+      }
 
     except Exception as e:
       print("ERROR fetching data @ {}: {}".format(page_link, e))
@@ -125,7 +127,6 @@ class Idealista:
       max_size = 500,
       **kwargs,
     ):
-
 
     # TOFIX
     province = Idealista.get_provincia(comune)
@@ -208,7 +209,11 @@ class Idealista:
         )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
-          executor.map(get_house_data_with_meta, links)
+          for result in executor.map(get_house_data_with_meta, links):
+            if result is not None:
+              Idealista.data += [result]
         next_page = Idealista.get_next_page(html_tree)
         if not next_page: 
           break
+
+      return Idealista.data
