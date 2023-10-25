@@ -3,7 +3,7 @@
   flex-direction: column;
   width: 50vw;
   min-width: 800px;
-  height: 100vh;
+  height: inherit;
 
   @media screen and (max-width: 1200px) {
     display: block;
@@ -22,6 +22,8 @@
   }
   
   .ListContainer {
+    display: flex;
+    justify-content: center;
     overflow-y: auto;
     flex: 1;
   }

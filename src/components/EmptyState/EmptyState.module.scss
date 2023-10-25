@@ -1,14 +1,11 @@
 .Container {
-  position: fixed;
-  width: 50vw;
-  height: 100vh;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  top: 0;
-  right: 0;
+  background-color: #FAFAFA;
 
   iframe {
     width: 100%;

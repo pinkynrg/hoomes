@@ -5,14 +5,20 @@ import { Button, Dropdown, Form, Input, InputNumber, Pagination } from 'antd';
 import { HomeElement } from '../HomeElement/HomeElement';
 import { useLocalStorage } from 'usehooks-ts';
 import { Home } from '../../types';
-import { DownOutlined, SearchOutlined } from '@ant-design/icons';
+import Icon, { DownOutlined, SearchOutlined } from '@ant-design/icons';
 import { NumberFormatter, stringToNumber } from '../../utils';
+import { NoData } from '../Icons/NoData';
+import classnames from 'classnames';
 
 interface HomesListProps {
   onPreview: (url: string) => void
+  className: string
 }
 
-const HomesList = ({ onPreview }: HomesListProps) => {
+const HomesList = ({ 
+  onPreview,
+  className,
+}: HomesListProps) => {
   const [homes] = useLocalStorage<Home[]>('data', [])
   const [search, setSearch] = useState('')
   const [minSize, setMinSize] = useState<string | undefined>()
@@ -84,7 +90,7 @@ const HomesList = ({ onPreview }: HomesListProps) => {
   const paginatedData = sortedHomes.slice(startIndex, endIndex);
 
   return (
-    <div className={style.Container}>
+    <div className={classnames(style.Container, className)}>
       <div className={style.Filters}>
         <Input 
           addonAfter={<SearchOutlined />}
@@ -203,11 +209,17 @@ const HomesList = ({ onPreview }: HomesListProps) => {
         </Dropdown>
       </div>
       <div className={style.ListContainer}>
-        <div className={style.List}>
-          {paginatedData.map((home) => (
-            <HomeElement key={home.uuid} home={home} onPreview={onPreview}/>
-          ))}
-        </div>
+        { 
+          paginatedData.length === 0 ?
+            <Icon component={NoData}/> :
+            <div className={style.List}>
+              {
+                paginatedData.map((home) => (
+                  <HomeElement key={home.uuid} home={home} onPreview={onPreview}/>
+                ))
+              }
+            </div>
+        }
       </div>
       <div className={style.Pagination}>
         <Pagination defaultCurrent={page} total={filteredHomes.length} onChange={onPaginationChange}/>;

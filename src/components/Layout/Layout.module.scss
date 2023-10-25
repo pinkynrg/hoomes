@@ -1,0 +1,22 @@
+.Layout {
+  display: flex;
+  flex-direction: column;
+  .Header {
+    display: flex;
+    height: 60px;
+    justify-content: center;
+    h1 {
+      font-size: 24px;
+      margin: 0;
+      line-height: 60px;
+      font-weight: 700;
+      span {
+        color: #1890FF;
+      }
+    }
+  }
+  .Body {
+    height: calc(100vh - 60px);
+    position: relative;
+  }
+}
