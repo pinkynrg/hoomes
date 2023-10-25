@@ -43,7 +43,7 @@ const HomeElement = ({
         </span>
         <span className={style.PrimeMeter}> 
           <Icon component={PriceMeter}/>
-          {EuroFormatter.format(home.price/home.m2)} Euro/m&sup2; 
+          {EuroFormatter.format(home.price/home.m2)}/m&sup2; 
         </span>
       </div>
       <div className={style.Footer}>

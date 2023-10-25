@@ -3,6 +3,7 @@
   flex-direction: column;
   width: 50vw;
   min-width: 800px;
+  height: 100vh;
 
   @media screen and (max-width: 1200px) {
     display: block;
@@ -18,16 +19,35 @@
     padding: 16px;
     overflow: hidden;
     box-sizing: border-box;
-  
-    * {
-      flex: 1;
-    }
   }
   
+  .ListContainer {
+    overflow-y: auto;
+    flex: 1;
+  }
   .List {
-    padding: 16px;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    padding: 16px;
     gap: 16px;
+    box-sizing: border-box;
   }
+
+  .Pagination {
+    padding: 16px;
+    margin: auto;   
+  }
+}
+
+.Dropdown {
+  background-color: #fff;
+  width: 250px;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #ddd;
 }
