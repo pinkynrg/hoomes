@@ -47,7 +47,11 @@ const HomeElement = ({
         </span>
       </div>
       <div className={style.Footer}>
-        <div className={style.Match}> 
+        <div className={classnames(style.Match, {
+          [style.Good]: home.match >= 0.7,
+          [style.Decent]: home.match <= 0.7 && home.match >= 0.3,
+          [style.Bad]: home.match < 0.3,
+        })}> 
           {percentage(home.match)}
         </div>
         <div className={style.Favorite} >

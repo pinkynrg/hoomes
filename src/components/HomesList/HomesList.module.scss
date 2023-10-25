@@ -5,16 +5,10 @@
   min-width: 800px;
   height: inherit;
 
-  @media screen and (max-width: 1200px) {
-    display: block;
-    width: 100vw;
-  }
-
   .Filters { 
     width: 100%;
     display: flex;
     gap: 10px;
-    margin-bottom: 10px;
     background: var(--geek-blue-1, #F0F5FF);
     padding: 16px;
     overflow: hidden;
@@ -23,10 +17,18 @@
   
   .ListContainer {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     overflow-y: auto;
     flex: 1;
   }
+
+  .ResultCounter {
+    color: #8C8C8C;
+    text-align: center;
+    padding: 16px;
+  }
+
   .List {
     display: flex;
     flex-direction: column;

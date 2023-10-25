@@ -83,13 +83,23 @@
         font-size: 16px;
         font-weight: 600;
         line-height: 20px;
-        background: var(--polar-green-6, #52C41A);
         display: flex;
         padding: 8px;
         justify-content: center;
         align-items: center;
         margin-right: auto;
+        
+        &.Good {
+          background: var(--polar-green-6, #52C41A);
+        }
 
+        &.Decent {
+          background: #e6802d;
+        }
+
+        &.Bad {
+          background: #F5222D;
+        }
       }
     }
   }

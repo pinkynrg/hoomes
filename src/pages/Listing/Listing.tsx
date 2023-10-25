@@ -9,7 +9,7 @@ const Listing = () => {
   return (
     <div className={style.Container}>
       <HomesList className={style.HomesList} onPreview={setUrl}/>
-      <EmptyState href={url ? 'http://localhost:5000/v1/proxy?url=' + url : undefined}/>
+      <EmptyState className={style.EmptyState} href={url ? 'http://localhost:5000/v1/proxy?url=' + url : undefined}/>
     </div>
   )
 }

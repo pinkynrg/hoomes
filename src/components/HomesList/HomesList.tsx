@@ -52,9 +52,11 @@ const HomesList = ({
   const filteredHomes = homes.map((home) => {
     
     // Calculate the match score as a number between 0 and 1
-    const searchWords = search.toLowerCase().split(' ');
+    const searchWords = search.length > 0 ? search.toLowerCase().split(' ') : []
 
-    const match = searchWords.filter(word => home.comment.includes(word)).length / searchWords.length;
+    const match = searchWords.length > 0 ? 
+      searchWords.filter(word => home.comment.includes(word)).length / searchWords.length :
+      1
 
     if (match === 0 && searchWords.length > 0) {
       return null;
@@ -208,6 +210,7 @@ const HomesList = ({
           </Button>
         </Dropdown>
       </div>
+      <div className={style.ResultCounter}> {filteredHomes.length} Risultati </div>
       <div className={style.ListContainer}>
         { 
           paginatedData.length === 0 ?
