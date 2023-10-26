@@ -214,7 +214,7 @@ const HomesList = ({
       <div className={style.ListContainer}>
         { 
           paginatedData.length === 0 ?
-            <Icon component={NoData}/> :
+            <Icon className={style.NoData} component={NoData}/> :
             <div className={style.List}>
               {
                 paginatedData.map((home) => (

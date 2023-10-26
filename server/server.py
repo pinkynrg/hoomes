@@ -200,7 +200,7 @@ def initiate_job():
     email = request.json.get('email')
 
     # Enqueue the scrape job
-    job = q.enqueue(fetch_data, email, city)
+    job = q.enqueue(fetch_data, email, city, result_ttl=-1)
 
     # Respond with a message indicating the job has been accepted
     response_message = {
@@ -219,7 +219,7 @@ def check_job_status(job_id):
 
     # Check the status of the job
     return jsonify({
-        'status': 'Job {}'.format(job.get_status()), 
+        'status': job.get_status(),
         'result': job.result
     }), 200
 

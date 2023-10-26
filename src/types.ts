@@ -1,3 +1,19 @@
+// requests
+
+// responses
+
+interface InProgressJobResponse {
+  "result": null | Home[],
+  "status": "failed"
+}
+
+interface FinishedJobResponse {
+  "result": Home[],
+  "status": "finished"
+}
+
+type JobResponse = InProgressJobResponse | FinishedJobResponse
+
 interface Home {
   match: number;
   uuid: string;
@@ -15,4 +31,7 @@ interface Home {
   updated_at: string;
 }
 
-export type { Home }
+export type { 
+  Home,
+  JobResponse,
+}
