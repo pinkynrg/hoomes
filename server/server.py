@@ -1,15 +1,21 @@
 from flask import Flask, jsonify, request, Response
-from rq import Queue, get_current_job
+from rq import Queue
 from functools import reduce
 import operator
 from peewee import fn
 from db import House
 from utils import calculate_match_percentage, remove_non_letters_and_split
 import http.client
-from worker import conn
+import redis
+import os
 from jobs import fetch_data
 
 app = Flask(__name__)
+
+conn = redis.from_url('redis://{host}:{port}/0'.format(
+    host=os.environ.get('REDIS_HOST', 'localhost'),
+    port=os.environ.get('REDIS_PORT', '6379'),
+))
 
 q = Queue(connection=conn, default_timeout=3600)
 
@@ -224,4 +230,4 @@ def check_job_status(job_id):
     }), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)

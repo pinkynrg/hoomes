@@ -5,7 +5,6 @@ import concurrent.futures
 from functools import partial
 import json
 import re
-# import multiprocessing
 
 class ComuniItalia: 
   HOST = "raw.githubusercontent.com"
