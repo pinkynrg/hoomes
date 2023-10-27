@@ -6,7 +6,6 @@ services:
     hostname: vpn
     image: ghcr.io/bubuntux/nordlynx
     ports:
-      - "80:80"
       - "5000:5000"
     cap_add:
       - NET_ADMIN
@@ -22,9 +21,7 @@ services:
 
   server:
     container_name: server
-    build:
-      context: .
-      dockerfile: ./Dockerfile.backend
+    image: pinkynrg/hoomes_server
     environment:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
@@ -39,19 +36,19 @@ services:
 
   frontend:
     container_name: frontend
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    network_mode: service:vpn
+    image: pinkynrg/hoomes_frontend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # - "8000:80"
+      - "80:80"
     depends_on:
       - server
       - vpn
 
   worker:
     container_name: hoomes-workers
-    build:
-      context: .
-      dockerfile: ./Dockerfile.backend
+    image: pinkynrg/hoomes_server
     environment:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
@@ -71,3 +68,18 @@ services:
     network_mode: service:vpn
     depends_on:
       - vpn
+
+  # https:
+  #   container_name: https
+  #   image: steveltn/https-portal:1
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #   restart: always
+  #   environment:
+  #     PROXY_READ_TIMEOUT: 3600
+  #     CLIENT_MAX_BODY_SIZE: 0
+  #     SERVER_NAMES_HASH_BUCKET_SIZE: 64
+  #     DOMAINS: 167.71.33.196 -> http://frontned:8000'
+  #   volumes:
+  #     - ./ssl-certs:/var/lib/https-portal
