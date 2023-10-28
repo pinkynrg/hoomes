@@ -216,7 +216,7 @@ const HomesList = ({
           {filteredHomes.length} Risultati
         </span>
         <Link to="/request">
-          Request another city
+          Richiedi un'altra cittá
         </Link>
       </div>
       <div className={style.ListContainer}>

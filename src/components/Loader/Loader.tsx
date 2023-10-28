@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 import { JobResponse, JobStatusTypes } from '../../types';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from 'antd';
+import { Button, Divider } from 'antd';
 
 interface LoaderProps {
   className?: string
@@ -51,9 +51,15 @@ const Loader = ({
 
   return (
     <div className={classnames(style.Container, className)}>
-      { `job status: ${status}` }
+      <h1> Sto scaricando... </h1>
+      <p> 
+        Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
+        <br/><br/>
+        Lo stato di scaricamento é <b>{`${status ?? 'unknown'}`}</b>
+      </p>
+      <Divider className={style.Divider}> oppure </Divider>
       <Button onClick={handleRequestAnotherCity} > 
-        Request another City 
+        Richiedi un'altra cittá
       </Button>
     </div>
   )
