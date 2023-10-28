@@ -6,7 +6,6 @@
   "main": "index.js",
   "author": "Francesco Meli",
   "license": "ISC",
-  "proxy": "http://localhost:5000",
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/jest": "^27.5.2",
@@ -25,7 +24,9 @@
     "stylelint": "^15.10.3",
     "stylelint-config-standard": "^34.0.0",
     "stylelint-config-standard-scss": "^11.0.0",
-    "stylelint-declaration-strict-value": "^1.9.2"
+    "stylelint-declaration-strict-value": "^1.9.2",
+    "http-proxy-middleware": "^2.0.6"
+
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
