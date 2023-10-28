@@ -15,9 +15,13 @@ jobs:
 
       - name: executing docker-compose stuff on remove host
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          NORD_VPN_PRIVATE_KEY: ${{ secrets.NORD_VPN_PRIVATE_KEY }}
         with:
           host: hoomes.me
           username: ${{ secrets.HOOMES_SSH_USER }}
           key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
           port: 22
-          script: whoami
+          envs: NORD_VPN_PRIVATE_KEY
+          script: |
+            echo "$NORD_VPN_PRIVATE_KEY"
