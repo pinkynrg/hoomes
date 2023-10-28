@@ -1,12 +1,12 @@
 from flask import Flask, jsonify, request, Response
 from db import Location
 from rq import Queue
-from peewee import fn
 import http.client
 import redis
 import os
 from jobs import fetch_data
 from playhouse.shortcuts import model_to_dict
+from services.scraper import ComuniItalia
 
 app = Flask(__name__)
 
@@ -16,6 +16,8 @@ conn = redis.from_url('redis://{host}:{port}/0'.format(
 ))
 
 q = Queue(connection=conn, default_timeout=3600)
+
+ComuniItalia.fetch()
 
 @app.route('/v1/locations', methods=['GET'])
 def get_all_locations():
