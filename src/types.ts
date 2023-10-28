@@ -2,6 +2,8 @@
 
 // responses
 
+type JobStatusTypes = 'queued' | 'started' | 'deferred' | 'finished' | 'stopped' | 'scheduled' | 'canceled' | 'failed'
+
 interface RequestResponse {
   "job_id": string
   "message": string
@@ -55,4 +57,5 @@ export type {
   Location,
   JobResponse,
   RequestResponse,
+  JobStatusTypes,
 }

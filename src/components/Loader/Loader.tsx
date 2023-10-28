@@ -3,7 +3,7 @@ import style from './Loader.module.scss';
 import classnames from 'classnames';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { JobResponse } from '../../types';
+import { JobResponse, JobStatusTypes } from '../../types';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from 'antd';
 
@@ -17,24 +17,24 @@ const Loader = ({
 
   const [, setData] = useLocalStorage('data', {})
   const [, setRequest] = useLocalStorage<string | null>('requestUUID', null)
-  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<JobStatusTypes | null>(null)
   const { jobUUID } = useParams();
   const navigate = useNavigate();
 
   const fetchJobStatus = useCallback(() => {
-    axios.get<JobResponse>(`/v1/jobs/${jobUUID}`).then(response => {
-      if (response.data.status === 'finished') {
-        setData(response.data.result)
-        setRequest(null)
-        navigate('/listing')
-      }
-      else {
-        setMessage(`job status: ${response.data.status}`)
-      }
-    }).catch(e => {
-      setMessage(`there was an error fetching the data: ${e}`)
-    })
-  }, [jobUUID, navigate, setData, setRequest])
+    if (status === null || !['finished', 'stopped', 'cancelled', 'failed'].includes(status)) {
+      axios.get<JobResponse>(`/v1/jobs/${jobUUID}`).then(response => {
+        setStatus(response.data.status)
+        if (response.data.status === 'finished') {
+          setData(response.data.result)
+          setRequest(null)
+          navigate('/listing')
+        }
+      }).catch(e => {
+        setStatus(e)  
+      })
+    }
+  }, [jobUUID, navigate, setData, setRequest, status])
 
   useEffect(() => {
     const intervalId = setInterval(fetchJobStatus, 1000);
@@ -45,12 +45,13 @@ const Loader = ({
   }, [fetchJobStatus])
 
   const handleRequestAnotherCity = () => {
+    setRequest(null)
     navigate('/request')
   }
 
   return (
     <div className={classnames(style.Container, className)}>
-      { message }
+      { `job status: ${status}` }
       <Button onClick={handleRequestAnotherCity} > 
         Request another City 
       </Button>
