@@ -1,8 +1,8 @@
 .Container {
-  flex: 1;
+  margin: auto;
+  width: 256px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   gap: 16px;
+  justify-content: space-around;
 }

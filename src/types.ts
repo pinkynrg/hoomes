@@ -2,6 +2,11 @@
 
 // responses
 
+interface RequestResponse {
+  "job_id": string
+  "message": string
+}
+
 interface InProgressJobResponse {
   "result": null | Home[],
   "status": "failed"
@@ -31,7 +36,23 @@ interface Home {
   updated_at: string;
 }
 
+interface Location {
+  codice: string;
+  nome: string;
+  zona_codice: string;
+  zona_nome: string;
+  regione_codice: string;
+  regione_nome: string;
+  provincia_codice: string;
+  provincia_nome: string;
+  sigla: string;
+  codiceCatastale: string;
+  cap: string;
+  popolazione: number;
+}
 export type { 
   Home,
+  Location,
   JobResponse,
+  RequestResponse,
 }

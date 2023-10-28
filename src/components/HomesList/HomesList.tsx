@@ -3,23 +3,24 @@ import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce'
 import { Button, Dropdown, Form, Input, InputNumber, Pagination } from 'antd';
 import { HomeElement } from '../HomeElement/HomeElement';
-import { useLocalStorage } from 'usehooks-ts';
 import { Home } from '../../types';
 import Icon, { DownOutlined, SearchOutlined } from '@ant-design/icons';
 import { NumberFormatter, stringToNumber } from '../../utils';
 import { NoData } from '../Icons/NoData';
 import classnames from 'classnames';
+import { Link } from 'react-router-dom';
 
 interface HomesListProps {
+  homes: Home[]
   onPreview: (url: string) => void
   className: string
 }
 
 const HomesList = ({ 
+  homes,
   onPreview,
   className,
 }: HomesListProps) => {
-  const [homes] = useLocalStorage<Home[]>('data', [])
   const [search, setSearch] = useState('')
   const [minSize, setMinSize] = useState<string | undefined>()
   const [maxSize, setMaxSize] = useState<string | undefined>()
@@ -210,7 +211,14 @@ const HomesList = ({
           </Button>
         </Dropdown>
       </div>
-      <div className={style.ResultCounter}> {filteredHomes.length} Risultati </div>
+      <div className={style.BelowFilter}> 
+        <span className={style.ResultCounter}>
+          {filteredHomes.length} Risultati
+        </span>
+        <Link to="/request">
+          Request another city
+        </Link>
+      </div>
       <div className={style.ListContainer}>
         { 
           paginatedData.length === 0 ?
@@ -225,7 +233,11 @@ const HomesList = ({
         }
       </div>
       <div className={style.Pagination}>
-        <Pagination defaultCurrent={page} total={filteredHomes.length} onChange={onPaginationChange}/>;
+        <Pagination 
+          defaultCurrent={page} 
+          total={filteredHomes.length} 
+          onChange={onPaginationChange}
+        />
       </div>
     </div>
   );

@@ -22,10 +22,14 @@
     flex: 1;
   }
 
-  .ResultCounter {
+  .BelowFilter {
     color: #8C8C8C;
     text-align: center;
     padding: 16px;
+
+    .ResultCounter {
+      margin: 0 16px 
+    }
   }
 
   .NoData {
