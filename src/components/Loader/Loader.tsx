@@ -26,7 +26,7 @@ const Loader = ({
       axios.get<JobResponse>(`/v1/jobs/${jobUUID}`).then(response => {
         setStatus(response.data.status)
         if (response.data.status === 'finished') {
-          setData(response.data.result)
+          setData(response.data.result ?? [])
           setRequest(null)
           navigate('/listing')
         }
