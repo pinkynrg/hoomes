@@ -17,7 +17,8 @@ const EmptyState = ({
     <iframe title="selected hoome" src={href}/> : 
     <>
       <div> <Icon component={FlatFace}/> </div>
-      Seleziona una casa per vedere l’anteprima
+      Seleziona una casa <br/>
+      per vedere l’anteprima
     </>
 
   return (

@@ -31,23 +31,34 @@ const HomesList = ({
   const [priceOpened, setPriceOpened] = useState<boolean>(false)
   const [sizeOpened, setSizeOpened] = useState<boolean>(false)
 
+  const scrollUp = () => {
+    document.getElementById('list')?.scroll({ top: 0 });
+  }
+
   const onPaginationChange = useDebouncedCallback((page: number, pageSize: number) => {
     setPage(page)
     setPageSize(pageSize)
+    scrollUp()
   }, 1000)
 
   const onSearch = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
+    setPage(1)
+    scrollUp()
   }, 1000)
 
   const onPrice = (data: {minPrice: string, maxPrice: string}) => {
     setMinPrice(data.minPrice)
     setMaxPrice(data.maxPrice)
+    setPage(1)
+    scrollUp()
   }
 
   const onSize = (data: {minSize: string, maxSize: string}) => {
     setMinSize(data.minSize)
     setMaxSize(data.maxSize)
+    setPage(1)
+    scrollUp()
   }
 
   const filteredHomes = homes.map((home) => {
@@ -97,7 +108,7 @@ const HomesList = ({
       <div className={style.Filters}>
         <Input 
           addonAfter={<SearchOutlined />}
-          placeholder='search stuff'
+          placeholder="Scrivi parole, per esempio 'travi vista' oppure 'signorile'"
           onChange={onSearch}
         />
         <Dropdown 
@@ -213,13 +224,13 @@ const HomesList = ({
       </div>
       <div className={style.BelowFilter}> 
         <span className={style.ResultCounter}>
-          {filteredHomes.length} Risultati
+          {filteredHomes.length} Risultati |
         </span>
-        <Link to="/request">
+        <Link className={style.NewRequestLink} to="/request">
           Richiedi un'altra cittá
         </Link>
       </div>
-      <div className={style.ListContainer}>
+      <div id="list" className={style.ListContainer}>
         { 
           paginatedData.length === 0 ?
             <Icon className={style.NoData} component={NoData}/> :
@@ -234,7 +245,7 @@ const HomesList = ({
       </div>
       <div className={style.Pagination}>
         <Pagination 
-          defaultCurrent={page} 
+          current={page}
           total={filteredHomes.length} 
           onChange={onPaginationChange}
         />

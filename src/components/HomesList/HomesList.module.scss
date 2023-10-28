@@ -1,7 +1,6 @@
 .Container {
   display: flex;
   flex-direction: column;
-  width: 50vw;
   height: inherit;
 
   .Filters { 
@@ -28,7 +27,12 @@
     padding: 16px;
 
     .ResultCounter {
-      margin: 0 16px 
+      margin: 0 4px;
+    }
+
+    .NewRequestLink {
+      text-decoration: none;
+      color: #1890FF;
     }
   }
 

@@ -3,13 +3,12 @@
   height: 100%;
 
   .HomesList {
-    border-right: 1px solid #f2f2f2;
-    @media screen and (max-width: 1200px) {
-      width: 100vw;
-    }
+    margin: auto;
   }
 
   .EmptyState {
+    flex: 1;
+    border-left: 1px solid #f2f2f2;
     @media screen and (max-width: 1200px) {
       display: none;
     }
