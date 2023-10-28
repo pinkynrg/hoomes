@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOOMES_SSH_PORT }}
           source: "docker-compose.yml"
-          target: "~"
+          target: "~/hoomes"
 
       - name: executing docker-compose stuff on remove host
         uses: appleboy/ssh-action@v1.0.0
@@ -31,4 +31,5 @@ jobs:
           key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOOMES_SSH_PORT }}
           script: |
+            cd hoomes
             echo "NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }}" > .env
