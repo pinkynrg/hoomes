@@ -58,7 +58,7 @@ jobs:
           username: ${{ secrets.HOOMES_SSH_USER }}
           key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOOMES_SSH_PORT }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,server/shell.db"
           target: "~/hoomes"
 
       - name: executing docker-compose stuff on remove host
@@ -70,6 +70,7 @@ jobs:
           port: ${{ secrets.HOOMES_SSH_PORT }}
           script: |
             cd hoomes
+            [ -e "data.db" ] && rm "shell.db" || mv "shell.db" "data.db"
             docker-compose down 
             docker-compose pull
             NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }} docker-compose up -d

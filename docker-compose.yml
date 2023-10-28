@@ -29,7 +29,7 @@ services:
     command: poetry run python server.py
     restart: always
     volumes:
-      - sqlite-data:/app/data.db
+      - ./data.db:/app/data.db
     depends_on:
       - redis
       - vpn
@@ -55,7 +55,7 @@ services:
     network_mode: service:vpn
     restart: always
     volumes:
-      - sqlite-data:/app/data.db
+      - ./data.db:/app/data.db
     depends_on:
       - redis
       - vpn
@@ -83,6 +83,3 @@ services:
       DOMAINS: 'hoomes.me -> http://frontend:80'
     volumes:
       - ./ssl-certs:/var/lib/https-portal
-
-volumes:
-  sqlite-data:
