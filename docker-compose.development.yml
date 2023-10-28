@@ -19,8 +19,8 @@ services:
       - net.ipv4.conf.all.rp_filter=2
       - net.ipv6.conf.all.disable_ipv6=1
 
-  server:
-    container_name: server
+  backend:
+    container_name: backend
     build:
       context: .
       dockerfile: ./Dockerfile.backend
@@ -46,7 +46,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      - server
+      - backend
       - vpn
 
   worker:
