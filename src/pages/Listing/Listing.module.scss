@@ -14,4 +14,16 @@
       display: none;
     }
   }
+
+  &.IsLoaded {
+    @media screen and (max-width: 1200px) {
+      .HomesList {
+        display: none;
+      }
+
+      .EmptyState {
+        display: block;
+      }
+    }
+  }
 }
