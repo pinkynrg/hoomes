@@ -32,7 +32,6 @@ jobs:
           port: ${{ secrets.HOOMES_SSH_PORT }}
           script: |
             cd hoomes
-            echo "NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }}" > .env
             docker-compose down 
             docker-compose pull
-            docker-compose up -d
+            NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }} docker-compose up -d
