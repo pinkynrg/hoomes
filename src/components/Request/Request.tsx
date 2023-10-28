@@ -41,26 +41,28 @@ const Request = ({
 
   return (
     <div className={classnames(style.Container, className)}>
-      <h1> Seleziona una cittá </h1>
-      <p> 
-        Il processo potrebbe richiedere diversi minuti di attesa. 
-        Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
-      </p>
-      <Select
-        optionLabelProp='name'
-        showSearch
-        onChange={setLocation}
-        filterOption={(input, option) => (option?.value.toLowerCase() ?? '').includes(input.toLowerCase())}
-        placeholder="Seleziona una cittá"
-        options={locations.map(location => ({ label: location.nome, value: location.nome }))}
-        disabled={locations.length === 0}
-      />
-      <Button 
-        disabled={!location}
-        onClick={handleRequest}
-      > 
-        Vai!
-      </Button>
+      <div className={style.Panel}>
+        <h1> Seleziona una cittá </h1>
+        <p> 
+          Il processo potrebbe richiedere diversi minuti di attesa. 
+          Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
+        </p>
+        <Select
+          optionLabelProp='name'
+          showSearch
+          onChange={setLocation}
+          filterOption={(input, option) => (option?.value.toLowerCase() ?? '').includes(input.toLowerCase())}
+          placeholder="Seleziona una cittá"
+          options={locations.map(location => ({ label: location.nome, value: location.nome }))}
+          disabled={locations.length === 0}
+        />
+        <Button 
+          disabled={!location}
+          onClick={handleRequest}
+        > 
+          Vai!
+        </Button>
+      </div>
     </div>
   )
 }

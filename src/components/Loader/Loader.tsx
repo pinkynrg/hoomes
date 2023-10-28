@@ -51,16 +51,18 @@ const Loader = ({
 
   return (
     <div className={classnames(style.Container, className)}>
-      <h1> Sto scaricando... </h1>
-      <p> 
-        Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
-        <br/><br/>
-        Lo stato di scaricamento é <b>{`${status ?? 'unknown'}`}</b>
-      </p>
-      <Divider className={style.Divider}> oppure </Divider>
-      <Button onClick={handleRequestAnotherCity} > 
-        Richiedi un'altra cittá
-      </Button>
+      <div className={style.Panel}>
+        <h1> Sto scaricando... </h1>
+        <p> 
+          Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
+          <br/><br/>
+          Lo stato di scaricamento é <b>{`${status ?? 'unknown'}`}</b>
+        </p>
+        <Divider className={style.Divider}> oppure </Divider>
+        <Button onClick={handleRequestAnotherCity} > 
+          Richiedi un'altra cittá
+        </Button>
+      </div>
     </div>
   )
 };
