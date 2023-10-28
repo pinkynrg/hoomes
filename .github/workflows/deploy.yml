@@ -34,7 +34,7 @@ jobs:
           REPOSITORY_NAME: hoomes_backend
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -f Dockerfile.frontend -t $REGISTRY_NAME/$REPOSITORY_NAME:$IMAGE_TAG -t $REGISTRY_NAME/$REPOSITORY_NAME:latest .
+          docker build -f Dockerfile.backend -t $REGISTRY_NAME/$REPOSITORY_NAME:$IMAGE_TAG -t $REGISTRY_NAME/$REPOSITORY_NAME:latest .
           echo "Pushing image to Registry..."
           docker login -u pinkynrg -p ${{ secrets.DOCKER_HUB_LOGIN_TOKEN }}
           docker push $REGISTRY_NAME/$REPOSITORY_NAME:$IMAGE_TAG
