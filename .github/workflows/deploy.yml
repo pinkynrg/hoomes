@@ -18,3 +18,4 @@ jobs:
         ssh_private_key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
         ssh_user: ${{ secrets.HOOMES_SSH_USER }}
         docker_compose_prefix: hoomes
+        docker_compose_filename: docker-compose.yml
