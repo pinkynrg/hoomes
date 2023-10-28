@@ -37,7 +37,7 @@ const Loader = ({
   }, [jobUUID, navigate, setData, setRequest, status])
 
   useEffect(() => {
-    const intervalId = setInterval(fetchJobStatus, 1000);
+    const intervalId = setInterval(fetchJobStatus, 5000);
     // Cleanup function to clear the interval when the component unmounts
     return () => {
       clearInterval(intervalId);

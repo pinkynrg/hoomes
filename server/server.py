@@ -72,7 +72,7 @@ def initiate_job():
     email = request.json.get('email')
 
     # Enqueue the scrape job
-    job = q.enqueue(fetch_data, email, city, result_ttl=-1)
+    job = q.enqueue(fetch_data, args=(email, city,))
 
     # Respond with a message indicating the job has been accepted
     response_message = {
