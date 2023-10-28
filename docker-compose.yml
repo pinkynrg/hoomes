@@ -11,7 +11,7 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     environment:
-      - PRIVATE_KEY=$NORDVPN_PRIVATE_KEY
+      - PRIVATE_KEY=$NORD_VPN_PRIVATE_KEY
       - QUERY=filters\[country_id\]=106 # ITALY
       - NET_LOCAL=192.168.0.0/16
     sysctls:
