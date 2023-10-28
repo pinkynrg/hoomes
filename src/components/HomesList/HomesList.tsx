@@ -27,7 +27,7 @@ const HomesList = ({
   const [minPrice, setMinPrice] = useState<string | undefined>()
   const [maxPrice, setMaxPrice] = useState<string | undefined>()
   const [page, setPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(100)
+  const [pageSize, setPageSize] = useState<number>(10)
   const [priceOpened, setPriceOpened] = useState<boolean>(false)
   const [sizeOpened, setSizeOpened] = useState<boolean>(false)
 
@@ -245,6 +245,8 @@ const HomesList = ({
       </div>
       <div className={style.Pagination}>
         <Pagination 
+          defaultCurrent={page}
+          defaultPageSize={pageSize}
           current={page}
           total={filteredHomes.length} 
           onChange={onPaginationChange}
