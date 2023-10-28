@@ -9,13 +9,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      
+      - name: checking out project
+        uses: actions/checkout@v2
 
-    - uses: alex-ac/github-action-ssh-docker-compose@master
-      name: Docker-Compose Remote Deployment
-      with:
-        ssh_host: hoomes.me
-        ssh_private_key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
-        ssh_user: ${{ secrets.HOOMES_SSH_USER }}
-        docker_compose_prefix: hoomes
-        docker_compose_filename: docker-compose.yml
+      - name: executing docker-compose stuff on remove host
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: hoomes.me
+          username: ${{ secrets.HOOMES_SSH_USER }}
+          key: ${{ secrets.HOOMES_SSH_PRIVATE_KEY }}
+          port: 22
+          script: whoami
