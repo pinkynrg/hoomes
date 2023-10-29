@@ -4,7 +4,7 @@ from rq import Queue
 import http.client
 import redis
 import os
-from jobs import fetch_data
+from services.scraper import Idealista
 from playhouse.shortcuts import model_to_dict
 from services.scraper import ComuniItalia
 
@@ -72,7 +72,7 @@ def initiate_job():
     email = request.json.get('email')
 
     # Enqueue the scrape job
-    job = q.enqueue(fetch_data, args=(email, city,))
+    job = q.enqueue(Idealista.fetch, args=(city,))
 
     # Respond with a message indicating the job has been accepted
     response_message = {

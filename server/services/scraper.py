@@ -40,8 +40,6 @@ class Idealista:
 
   PROTOCOL = "https://"
   HOST = "www.idealista.it"
-  data = []
-
 
   def format_name(name):
     return name.replace(' ', '-').replace('\'', '-').lower()
@@ -127,6 +125,7 @@ class Idealista:
       **kwargs,
     ):
 
+    collection = []
     # TOFIX
     province = Idealista.get_provincia(comune)
 
@@ -155,7 +154,7 @@ class Idealista:
     if (total_houses and total_houses > 60 * 30):
       if max_price - min_price > 1:
         mid_price = min_price+int((max_price-min_price)/2)
-        Idealista.fetch(
+        collection += Idealista.fetch(
           comune=comune, 
           min_price=min_price, 
           max_price=mid_price, 
@@ -163,7 +162,7 @@ class Idealista:
           max_size=max_size, 
           **kwargs
         )
-        Idealista.fetch(
+        collection += Idealista.fetch(
           comune=comune, 
           min_price=mid_price, 
           max_price=max_price, 
@@ -174,7 +173,7 @@ class Idealista:
       else:
         if max_size - min_size > 1:
           mid_size = min_size+int((max_size-min_size)/2)
-          Idealista.fetch(
+          collection += Idealista.fetch(
             comune=comune, 
             min_price=min_price, 
             max_price=max_price, 
@@ -182,7 +181,7 @@ class Idealista:
             max_size=mid_size, 
             **kwargs
           )
-          Idealista.fetch(
+          collection += Idealista.fetch(
             comune=comune, 
             min_price=min_price, 
             max_price=max_price, 
@@ -191,7 +190,7 @@ class Idealista:
             **kwargs
           )
         else:
-          return
+          pass
     else:
       while True: 
         page_link = get_final_url(next_page)
@@ -210,9 +209,9 @@ class Idealista:
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
           for result in executor.map(get_house_data_with_meta, links):
             if result is not None:
-              Idealista.data += [result]
+              collection += [result]
         next_page = Idealista.get_next_page(html_tree)
         if not next_page: 
           break
 
-      return Idealista.data
+    return collection
