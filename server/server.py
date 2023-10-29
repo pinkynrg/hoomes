@@ -7,6 +7,7 @@ import os
 from services.scraper import Idealista
 from playhouse.shortcuts import model_to_dict
 from services.scraper import ComuniItalia
+from jobs import fetch_homes
 
 app = Flask(__name__)
 
@@ -72,7 +73,7 @@ def initiate_job():
     email = request.json.get('email')
 
     # Enqueue the scrape job
-    job = q.enqueue(Idealista.fetch, args=(city,))
+    job = q.enqueue(fetch_homes, args=(city,))
 
     # Respond with a message indicating the job has been accepted
     response_message = {

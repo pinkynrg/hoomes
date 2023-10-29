@@ -56,7 +56,7 @@ const Loader = ({
         <p> 
           Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
           <br/><br/>
-          Lo stato di scaricamento é <b>{`${status ?? 'unknown'}`}</b>
+          Lo stato di scaricamento é <b>{`${status ?? '...'}`}</b>
         </p>
         <Divider className={style.Divider}> oppure </Divider>
         <Button onClick={handleRequestAnotherCity} > 

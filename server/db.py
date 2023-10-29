@@ -49,6 +49,22 @@ class House(Model):
     source = CharField()
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField(default=datetime.now)
+
+    def serialize(self):
+        return {
+            'uuid': self.uuid,
+            'url': self.url,
+            'image': self.image,
+            'title': self.title,
+            'location': self.location,
+            'm2': self.m2,
+            'comune': self.comune,
+            'price': self.price,
+            'comment': self.comment,
+            'source': self.source,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
     
     class Meta:
         database = db
