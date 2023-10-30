@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { JobResponse, JobStatusTypes } from '../../types';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Divider } from 'antd';
+import { db } from './../../dbConfig';
 
 interface LoaderProps {
   className?: string
@@ -15,7 +16,6 @@ const Loader = ({
   className,
 }: LoaderProps) => {
 
-  const [, setData] = useLocalStorage('data', {})
   const [, setRequest] = useLocalStorage<string | null>('requestUUID', null)
   const [status, setStatus] = useState<JobStatusTypes | null>(null)
   const { jobUUID } = useParams();
@@ -26,7 +26,8 @@ const Loader = ({
       axios.get<JobResponse>(`/v1/jobs/${jobUUID}`).then(response => {
         setStatus(response.data.status)
         if (response.data.status === 'finished') {
-          setData(response.data.result ?? [])
+          db.homes.clear()
+          db.homes.bulkPut(response.data.result)
           setRequest(null)
           navigate('/listing')
         }
@@ -34,7 +35,7 @@ const Loader = ({
         setStatus(e)  
       })
     }
-  }, [jobUUID, navigate, setData, setRequest, status])
+  }, [jobUUID, navigate, setRequest, status])
 
   useEffect(() => {
     const intervalId = setInterval(fetchJobStatus, 5000);

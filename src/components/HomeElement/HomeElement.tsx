@@ -1,5 +1,4 @@
 import Icon, { StarOutlined } from '@ant-design/icons';
-import { Home } from '../../types';
 import { Location } from './../Icons/Location';
 import { PriceTag } from './../Icons/PriceTag';
 import { M2 } from './../Icons/M2';
@@ -8,11 +7,12 @@ import style from './HomeElement.module.scss';
 import classnames from 'classnames';
 import { EuroFormatter, percentage } from '../../utils';
 import { Button } from 'antd';
+import { HomeWithMatch } from '../../types';
 
 interface HomeElementProps {
   onPreview: (url: string) => void
   className?: string
-  home: Home 
+  home: HomeWithMatch
 }
 
 const HomeElement = ({

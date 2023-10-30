@@ -1,32 +1,33 @@
 import style from './HomesList.module.scss';
 import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce'
-import { Button, Dropdown, Form, Input, InputNumber, Pagination } from 'antd';
+import { Button, Dropdown, Form, Input, InputNumber, Pagination, Spin } from 'antd';
 import { HomeElement } from '../HomeElement/HomeElement';
-import { Home } from '../../types';
 import Icon, { DownOutlined, SearchOutlined } from '@ant-design/icons';
 import { NumberFormatter, stringToNumber } from '../../utils';
 import { NoData } from '../Icons/NoData';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
+import { db } from './../../dbConfig';
+import { HomeWithMatch } from '../../types';
+import { useLiveQuery } from "dexie-react-hooks";
 
 interface HomesListProps {
-  homes: Home[]
   onPreview: (url: string) => void
   className: string
 }
 
 const HomesList = ({ 
-  homes,
   onPreview,
   className,
 }: HomesListProps) => {
+  
   const [search, setSearch] = useState('')
   const [minSize, setMinSize] = useState<string | undefined>()
   const [maxSize, setMaxSize] = useState<string | undefined>()
   const [minPrice, setMinPrice] = useState<string | undefined>()
   const [maxPrice, setMaxPrice] = useState<string | undefined>()
-  const [page, setPage] = useState<number>(1)
+  const [pageNumber, setPageNumber] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   const [priceOpened, setPriceOpened] = useState<boolean>(false)
   const [sizeOpened, setSizeOpened] = useState<boolean>(false)
@@ -36,78 +37,88 @@ const HomesList = ({
   }
 
   const onPaginationChange = useDebouncedCallback((page: number, pageSize: number) => {
-    setPage(page)
+    setPageNumber(page)
     setPageSize(pageSize)
     scrollUp()
   }, 1000)
 
   const onSearch = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
-    setPage(1)
+    setPageNumber(1)
     scrollUp()
   }, 1000)
 
   const onPrice = (data: {minPrice: string, maxPrice: string}) => {
     setMinPrice(data.minPrice)
     setMaxPrice(data.maxPrice)
-    setPage(1)
+    setPageNumber(1)
     scrollUp()
   }
 
   const onSize = (data: {minSize: string, maxSize: string}) => {
     setMinSize(data.minSize)
     setMaxSize(data.maxSize)
-    setPage(1)
+    setPageNumber(1)
     scrollUp()
   }
 
-  const filteredHomes = homes.map((home) => {
-    
-    // Calculate the match score as a number between 0 and 1
-    const searchWords = search.length > 0 ? search.toLowerCase().split(' ') : []
+  // Calculate the match score as a number between 0 and 1
+  const searchWords = search.length > 0 ? search.toLowerCase().split(' ') : []
 
-    const match = searchWords.length > 0 ? 
-      searchWords.filter(word => home.comment.includes(word)).length / searchWords.length :
-      1
+  const homes = useLiveQuery(() => {
 
-    if (match === 0 && searchWords.length > 0) {
-      return null;
+    const query = db.homes.toCollection()
+
+    if (minSize) {
+      // Apply minimum size filter
+      query.and(home => home.m2 >= parseInt(minSize, 10));
     }
   
-    // Filter by minimum and maximum size (if set)
-    if (minSize && home.m2 < parseInt(minSize, 10)) {
-      return null; // Filter out the house
-    }
-    if (maxSize && home.m2 > parseInt(maxSize, 10)) {
-      return null; // Filter out the house
+    if (maxSize) {
+      // Apply maximum size filter
+      query.and(home => home.m2 <= parseInt(maxSize, 10));
     }
   
-    // Filter by minimum and maximum price (if set)
-    if (minPrice && home.price < parseInt(minPrice, 10)) {
-      return null; // Filter out the house
-    }
-    if (maxPrice && home.price > parseInt(maxPrice, 10)) {
-      return null; // Filter out the house
+    if (minPrice) {
+      // Apply minimum price filter
+      query.and(home => home.price >= parseInt(minPrice, 10));
     }
   
-    // If all conditions pass, include this home in the result with the match score
-    return { ...home, match };
-  }).filter((e): e is Home => e !== null); // Remove null entries
+    if (maxPrice) {
+      // Apply maximum price filter
+      query.and(home => home.price <= parseInt(maxPrice, 10));
+    }
 
-  const sortedHomes = filteredHomes.sort((a, b) => b.match - a.match);
+    return query.toArray()
+
+  }, [minSize, maxSize, minPrice, maxPrice, search])
+
+  // filter by keywords 
+  const homesMatchingSearch = searchWords.length ? 
+    homes?.filter(home => searchWords.some(word => home.comment.includes(` ${word} `))) : 
+    homes
+
+  // add match index to homes
+  const homesWithMatch: HomeWithMatch[] | undefined = homesMatchingSearch?.map(home => ({
+    ...home, 
+    match: searchWords.filter(word => home.comment.includes(word)).length / searchWords.length,
+  }))
+
+  // sorting
+  const sortedHomes = homesWithMatch?.sort((a, b) => b.match - a.match);
 
   // Calculate the start and end indexes for the current page
-  const startIndex = (page - 1) * pageSize;
+  const startIndex = (pageNumber - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
   // Extract the slice of data for the current page
-  const paginatedData = sortedHomes.slice(startIndex, endIndex);
+  const paginatedHomes = sortedHomes ? sortedHomes.slice(startIndex, endIndex) : undefined;
 
   return (
     <div className={classnames(style.Container, className)}>
       <div className={style.Filters}>
         <Input 
-          addonAfter={<SearchOutlined />}
+          prefix={<SearchOutlined />}
           placeholder="Scrivi parole, per esempio 'travi vista' oppure 'signorile'"
           onChange={onSearch}
         />
@@ -222,36 +233,46 @@ const HomesList = ({
           </Button>
         </Dropdown>
       </div>
-      <div className={style.BelowFilter}> 
-        <span className={style.ResultCounter}>
-          {filteredHomes.length} Risultati |
-        </span>
-        <Link className={style.NewRequestLink} to="/request">
-          Richiedi un'altra cittá
-        </Link>
-      </div>
+      {
+        sortedHomes &&
+          <div className={style.BelowFilter}> 
+            <span className={style.ResultCounter}>
+              {sortedHomes.length} Risultati |
+            </span>
+            <Link className={style.NewRequestLink} to="/request">
+              Richiedi un'altra cittá
+            </Link>
+          </div>
+      }
       <div id="list" className={style.ListContainer}>
         { 
-          paginatedData.length === 0 ?
-            <Icon className={style.NoData} component={NoData}/> :
-            <div className={style.List}>
-              {
-                paginatedData.map((home) => (
-                  <HomeElement key={home.uuid} home={home} onPreview={onPreview}/>
-                ))
-              }
-            </div>
+          paginatedHomes !== undefined ?
+            paginatedHomes.length === 0 ? 
+              <Icon className={style.NoData} component={NoData}/> :
+              <div className={style.List}>
+                { paginatedHomes.map((home) => (
+                  <HomeElement 
+                    key={home.uuid} 
+                    home={home} 
+                    onPreview={onPreview}
+                  />
+                ))}
+              </div> :
+            <Spin size='large'/>
         }
       </div>
-      <div className={style.Pagination}>
-        <Pagination 
-          defaultCurrent={page}
-          defaultPageSize={pageSize}
-          current={page}
-          total={filteredHomes.length} 
-          onChange={onPaginationChange}
-        />
-      </div>
+      {
+        sortedHomes &&
+        <div className={style.Pagination}>
+          <Pagination 
+            defaultCurrent={pageNumber}
+            defaultPageSize={pageSize}
+            current={pageNumber}
+            total={sortedHomes.length} 
+            onChange={onPaginationChange}
+          />
+        </div>
+      }
     </div>
   );
 };

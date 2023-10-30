@@ -1,6 +1,4 @@
-// requests
-
-// responses
+import { Home } from './dbConfig'
 
 type JobStatusTypes = 'queued' | 'started' | 'deferred' | 'finished' | 'stopped' | 'scheduled' | 'canceled' | 'failed'
 
@@ -21,23 +19,6 @@ interface FinishedJobResponse {
 
 type JobResponse = InProgressJobResponse | FinishedJobResponse
 
-interface Home {
-  match: number;
-  uuid: string;
-  url: string;
-  image: string;
-  title: string;
-  location: string;
-  m2: number;
-  province: string;
-  region: string,
-  price: number;
-  comment: string;
-  source: string;
-  created_at: string;
-  updated_at: string;
-}
-
 interface Location {
   codice: string;
   nome: string;
@@ -52,10 +33,15 @@ interface Location {
   cap: string;
   popolazione: number;
 }
+
+interface HomeWithMatch extends Home { 
+  match: number 
+}
+
 export type { 
-  Home,
   Location,
   JobResponse,
   RequestResponse,
   JobStatusTypes,
+  HomeWithMatch,
 }

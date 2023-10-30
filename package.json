@@ -21,12 +21,11 @@
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "http-proxy-middleware": "^2.0.6",
     "stylelint": "^15.10.3",
     "stylelint-config-standard": "^34.0.0",
     "stylelint-config-standard-scss": "^11.0.0",
-    "stylelint-declaration-strict-value": "^1.9.2",
-    "http-proxy-middleware": "^2.0.6"
-
+    "stylelint-declaration-strict-value": "^1.9.2"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
@@ -36,6 +35,8 @@
     "antd": "^5.9.4",
     "axios": "^1.5.1",
     "classnames": "^2.3.2",
+    "dexie": "^3.2.4",
+    "dexie-react-hooks": "^1.1.6",
     "moment": "^2.29.4",
     "qs": "^6.11.2",
     "react": "^18.2.0",
