@@ -1,9 +1,9 @@
 import style from './HomesList.module.scss';
 import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce'
-import { Button, Dropdown, Form, Input, InputNumber, Pagination, Spin } from 'antd';
+import { Button, Dropdown, Form, Input, InputNumber, Pagination, Spin, TreeSelect } from 'antd';
 import { HomeElement } from '../HomeElement/HomeElement';
-import Icon, { DownOutlined, SearchOutlined } from '@ant-design/icons';
+import Icon, { SearchOutlined } from '@ant-design/icons';
 import { NumberFormatter, stringToNumber } from '../../utils';
 import { NoData } from '../Icons/NoData';
 import classnames from 'classnames';
@@ -23,6 +23,7 @@ const HomesList = ({
 }: HomesListProps) => {
   
   const [search, setSearch] = useState('')
+  const [locations, setLocations] = useState<string[]>([])
   const [minSize, setMinSize] = useState<string | undefined>()
   const [maxSize, setMaxSize] = useState<string | undefined>()
   const [minPrice, setMinPrice] = useState<string | undefined>()
@@ -35,6 +36,10 @@ const HomesList = ({
   const scrollUp = () => {
     document.getElementById('list')?.scroll({ top: 0 });
   }
+
+  const onLocationsChange = useDebouncedCallback((cities: string[]) => {
+    setLocations(cities)
+  })
 
   const onPaginationChange = useDebouncedCallback((page: number, pageSize: number) => {
     setPageNumber(page)
@@ -65,6 +70,28 @@ const HomesList = ({
   // Calculate the match score as a number between 0 and 1
   const searchWords = search.length > 0 ? search.toLowerCase().split(' ') : []
 
+  const allHomes = useLiveQuery(() => {
+    return db.homes.toArray()
+  }) || []
+
+  const citiesTree = allHomes
+    .filter(home => home.province)
+    .map(home => home.province)
+    .filter((home, index, array) => array.indexOf(home) === index)
+    .map(province => ({
+      value: `${province}!`,
+      title: province,
+      children: allHomes
+        .filter(home => home.province === province)
+        .map(home => home.city)
+        .filter((city, index, array) => array.indexOf(city) === index)
+        .map(city => ({
+          value: city,
+          title: city,
+        }))
+    })
+  )
+
   const homes = useLiveQuery(() => {
 
     const query = db.homes.toCollection()
@@ -89,9 +116,14 @@ const HomesList = ({
       query.and(home => home.price <= parseInt(maxPrice, 10));
     }
 
+    if (locations.length > 0) {
+      // Apply maximum price filter
+      query.and(home => locations.includes(home.city));
+    }
+
     return query.toArray()
 
-  }, [minSize, maxSize, minPrice, maxPrice, search])
+  }, [minSize, maxSize, minPrice, maxPrice, search, locations])
 
   // filter by keywords 
   const homesMatchingSearch = searchWords.length ? 
@@ -117,6 +149,25 @@ const HomesList = ({
   return (
     <div className={classnames(style.Container, className)}>
       <div className={style.Filters}>
+        <TreeSelect
+          allowClear
+          showSearch
+          multiple
+          treeCheckable
+          style={{ minWidth: '150px' }}
+          dropdownStyle={{ width: '250px' }}
+          filterTreeNode={(inputValue: string, treeNode: any) => {
+            const toLower = inputValue.toLowerCase()
+            return treeNode.title.toLowerCase().includes(toLower)}
+          }
+          maxTagCount={0}
+          autoClearSearchValue={false}
+          showCheckedStrategy='SHOW_CHILD'
+          onChange={onLocationsChange}
+          placeholder="Seleziona una cittá"
+          treeData={citiesTree}
+          disabled={citiesTree.length === 0}
+        />
         <Input 
           prefix={<SearchOutlined />}
           placeholder="Scrivi parole, per esempio 'travi vista' oppure 'signorile'"
@@ -137,32 +188,24 @@ const HomesList = ({
               maxPrice,
             }}
           >
-            <Form.Item
-              label="Da"
-              name="minPrice"
-            >
-              <InputNumber
-                addonAfter="€"
-                style={{width: '100%'}}
-                controls={false}
-                placeholder='Min. Price'
-                formatter={value => value ? NumberFormatter.format(value) : ''}
-                parser={(value?: string) => value ? stringToNumber(value) : ''}
-              />
-            </Form.Item>
-            <Form.Item
-              label="A"
-              name="maxPrice"
-            >
-              <InputNumber
-                addonAfter="€"
-                style={{width: '100%'}}
-                controls={false}
-                placeholder='Max. Price'
-                formatter={value => value ? NumberFormatter.format(value) : ''}
-                parser={(value?: string) => value ? stringToNumber(value) : ''}
-              />
-            </Form.Item>
+            <InputNumber
+              className={style.InputNumber}
+              addonAfter="€"
+              style={{width: '100%'}}
+              controls={false}
+              placeholder='Min. Price'
+              formatter={value => value ? NumberFormatter.format(value) : ''}
+              parser={(value?: string) => value ? stringToNumber(value) : ''}
+            />
+            <InputNumber
+              className={style.InputNumber}
+              addonAfter="€"
+              style={{width: '100%'}}
+              controls={false}
+              placeholder='Max. Price'
+              formatter={value => value ? NumberFormatter.format(value) : ''}
+              parser={(value?: string) => value ? stringToNumber(value) : ''}
+            />
             <Button 
               htmlType='submit' 
               onClick={() => setPriceOpened(false)}>
@@ -170,12 +213,7 @@ const HomesList = ({
             </Button>
           </Form>
         )}>
-          <Button 
-            onClick={() => setPriceOpened(!priceOpened)}
-          >
-            Prezzo
-            <DownOutlined />
-          </Button>
+          <Button onClick={() => setPriceOpened(!priceOpened)}> € </Button>
         </Dropdown>
         <Dropdown 
           placement="bottom" 
@@ -192,32 +230,24 @@ const HomesList = ({
               maxSize,
             }}
           >
-            <Form.Item
-              label="Da"
-              name="minSize"
-            >
-              <InputNumber
-                addonAfter="m&sup2;"
-                style={{width: '100%'}}
-                controls={false}
-                placeholder='Min. Size'
-                formatter={value => value ? NumberFormatter.format(value) : ''}
-                parser={(value?: string) => value ? stringToNumber(value) : ''}
-              />
-            </Form.Item>
-            <Form.Item
-              label="A"
-              name="maxSize"
-            >
-              <InputNumber
-                addonAfter="m&sup2;"
-                style={{width: '100%'}}
-                controls={false}
-                placeholder='Max. Size'
-                formatter={value => value ? NumberFormatter.format(value) : ''}
-                parser={(value?: string) => value ? stringToNumber(value) : ''}
-              />
-            </Form.Item>
+            <InputNumber
+              className={style.InputNumber}
+              addonAfter="m&sup2;"
+              style={{width: '100%'}}
+              controls={false}
+              placeholder='Min. Size'
+              formatter={value => value ? NumberFormatter.format(value) : ''}
+              parser={(value?: string) => value ? stringToNumber(value) : ''}
+            />
+            <InputNumber
+              className={style.InputNumber}
+              addonAfter="m&sup2;"
+              style={{width: '100%'}}
+              controls={false}
+              placeholder='Max. Size'
+              formatter={value => value ? NumberFormatter.format(value) : ''}
+              parser={(value?: string) => value ? stringToNumber(value) : ''}
+            />
             <Button 
               htmlType='submit' 
               onClick={() => setSizeOpened(false)}>
@@ -225,12 +255,7 @@ const HomesList = ({
             </Button>
           </Form>
         )}>
-          <Button 
-            onClick={() => setSizeOpened(!sizeOpened)}
-          >
-            m&sup2;
-            <DownOutlined />
-          </Button>
+          <Button onClick={() => setSizeOpened(!sizeOpened)}>m&sup2;</Button>
         </Dropdown>
       </div>
       {
@@ -240,7 +265,7 @@ const HomesList = ({
               {sortedHomes.length} Risultati |
             </span>
             <Link className={style.NewRequestLink} to="/request">
-              Richiedi un'altra cittá
+              Richiedi altre cittá
             </Link>
           </div>
       }

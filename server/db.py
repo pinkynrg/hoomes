@@ -43,7 +43,8 @@ class House(Model):
     title = CharField()
     location = CharField()
     m2 = IntegerField()
-    comune = CharField()
+    city = CharField()
+    province = CharField()
     price = FloatField()
     comment = TextField()
     source = CharField()
@@ -58,7 +59,8 @@ class House(Model):
             'title': self.title,
             'location': self.location,
             'm2': self.m2,
-            'comune': self.comune,
+            'city': self.city,
+            'province': self.province,
             'price': self.price,
             'comment': self.comment,
             'source': self.source,

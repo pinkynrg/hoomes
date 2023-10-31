@@ -1,7 +1,6 @@
 .Container {
   display: flex;
   justify-content: center;
-  align-items: center;
   height: 100%;
 
   .Panel {
@@ -24,5 +23,11 @@
     p {
       margin: 0;
     }
+
+    .Error {
+      padding: 12px;
+      background-color: #ffb8b8;
+      border-radius: 4px;
+    } 
   }
 }

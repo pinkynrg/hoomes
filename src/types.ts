@@ -2,22 +2,29 @@ import { Home } from './dbConfig'
 
 type JobStatusTypes = 'queued' | 'started' | 'deferred' | 'finished' | 'stopped' | 'scheduled' | 'canceled' | 'failed'
 
-interface RequestResponse {
-  "job_id": string
-  "message": string
+interface RequestResponseSuccess {
+  jobs_id: string[]
+  message: string
 }
 
-interface InProgressJobResponse {
-  "result": null | Home[],
-  "status": "failed"
+interface RequestResponseFailure {
+  jobs_id: undefined,
+  error: string,
+  code: string,
+} 
+
+type RequestResponse = RequestResponseFailure | RequestResponseSuccess
+
+interface JobResponse {
+  job_id: string,
+  status: JobStatusTypes
 }
 
-interface FinishedJobResponse {
-  "result": Home[],
-  "status": "finished"
+interface JobsResponse {
+  jobs: JobResponse[]
+  result: Home[]
+  finished: boolean
 }
-
-type JobResponse = InProgressJobResponse | FinishedJobResponse
 
 interface Location {
   codice: string;
@@ -40,8 +47,8 @@ interface HomeWithMatch extends Home {
 
 export type { 
   Location,
-  JobResponse,
   RequestResponse,
   JobStatusTypes,
   HomeWithMatch,
+  JobsResponse,
 }

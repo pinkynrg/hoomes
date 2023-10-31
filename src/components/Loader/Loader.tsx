@@ -3,7 +3,7 @@ import style from './Loader.module.scss';
 import classnames from 'classnames';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { JobResponse, JobStatusTypes } from '../../types';
+import { JobsResponse } from '../../types';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Divider } from 'antd';
 import { db } from './../../dbConfig';
@@ -17,15 +17,16 @@ const Loader = ({
 }: LoaderProps) => {
 
   const [, setRequest] = useLocalStorage<string | null>('requestUUID', null)
-  const [status, setStatus] = useState<JobStatusTypes | null>(null)
+  const [status, setStatus] = useState<string | null>('idle')
   const { jobUUID } = useParams();
   const navigate = useNavigate();
 
   const fetchJobStatus = useCallback(() => {
-    if (status === null || !['finished', 'stopped', 'cancelled', 'failed'].includes(status)) {
-      axios.get<JobResponse>(`/v1/jobs/${jobUUID}`).then(response => {
-        setStatus(response.data.status)
-        if (response.data.status === 'finished') {
+    if (status !== 'finished') {
+      axios.get<JobsResponse>(`/v1/jobs/${jobUUID}`).then(response => {
+        setStatus('processing')
+        if (response.data.finished) {
+          setStatus('finished')
           db.homes.clear()
           db.homes.bulkPut(response.data.result)
           setRequest(null)
@@ -57,7 +58,7 @@ const Loader = ({
         <p> 
           Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
           <br/><br/>
-          Lo stato di scaricamento é <b>{`${status ?? '...'}`}</b>
+          Lo stato é <b>{status}</b>
         </p>
         <Divider className={style.Divider}> oppure </Divider>
         <Button onClick={handleRequestAnotherCity} > 

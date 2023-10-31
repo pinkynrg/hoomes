@@ -16,7 +16,9 @@ conn = redis.from_url('redis://{host}:{port}/0'.format(
     port=os.environ.get('REDIS_PORT', '6379'),
 ))
 
-q = Queue(connection=conn, default_timeout=3600)
+q = Queue(connection=conn, default_timeout=3600, result_ttl=86400)
+
+MAX_JOBS = 50
 
 ComuniItalia.fetch()
 
@@ -69,31 +71,81 @@ def proxy_url():
     
 @app.route('/v1/request', methods=['POST'])
 def initiate_job():
-    city = request.json.get('city')
-    email = request.json.get('email')
+    city_codes = request.json.get('codes')
+
+    if city_codes is None:
+        response_message = {'error': 'The `codes` parameter is missing', 'code': 'E001'}
+        return jsonify(response_message), 400
+
+    if len(city_codes) > MAX_JOBS: 
+        response_message = {'error': 'Request fewer cities.', 'code': 'E002'}
+        return jsonify(response_message), 400
+    
+    try:
+      coordinates = []
+      for city_code in city_codes:
+        location = Location.get(codice=city_code)
+        coordinates += [(location.nome, location.provincia_nome)]
+    except Exception:
+      response_message = {'error': 'One or more codes were not valid', 'code': 'E003'}
+      return jsonify(response_message), 400
 
     # Enqueue the scrape job
-    job = q.enqueue(fetch_homes, args=(city,))
+    jobs = []
+    for coordinate in coordinates: 
+      jobs += [q.enqueue(fetch_homes, args=coordinate)]
 
     # Respond with a message indicating the job has been accepted
     response_message = {
-        'message': 'Your job has been accepted. We will notify you when it has finished processing.',
-        'job_id': job.get_id()  # Provide the job ID for checking status
+        'message': 'Your request has been accepted. We will notify you when it has finished processing.',
+        'jobs_id': [job.get_id() for job in jobs]
     }
     return jsonify(response_message), 200
     
-@app.route('/v1/jobs/<job_id>', methods=['GET'])
-def check_job_status(job_id):
-    # Use RQ's get_current_job to retrieve the job by ID
-    job = q.fetch_job(job_id)
+@app.route('/v1/jobs/<jobs_id_str>', methods=['GET'])
+def check_job_status(jobs_id_str):
 
-    if job is None:
-        return jsonify({'status': 'Job not found'}), 404
+    if jobs_id_str is None or jobs_id_str.strip() == "":
+        # Return a 400 Bad Request response if "cities" is not supplied
+        response_message = {'error': 'The `jobs_id` parameter is missing, empty or malformed', 'code': 'E010'}
+        return jsonify(response_message), 400
+    
+    # split jobs id
+    jobs_id = [e.strip() for e in jobs_id_str.split(",")]
 
+    if len(jobs_id) > MAX_JOBS: 
+        response_message = {'error': 'Select fewer jobs.', 'code': 'E011'}
+        return jsonify(response_message), 400
+
+    jobs_status = []
+    
+    for job_id in jobs_id:
+        job = q.fetch_job(job_id)
+        if job is None:
+            jobs_status += [{
+                'job_id': job_id, 
+                'status': 'invalid'
+            }]
+        else: 
+            jobs_status += [{
+                'job_id': job_id,
+                'status': job.get_status(),
+            }]
+
+    finished = all([job_status['status'] in ['invalid', 'failed', 'finished'] for job_status in jobs_status])
+    
+    result = []
+    if finished:
+        for job_id in jobs_id:
+          job = q.fetch_job(job_id)
+          if job is not None and job.result is not None:
+            result += job.result
+        
     # Check the status of the job
     return jsonify({
-        'status': job.get_status(),
-        'result': job.result
+        "jobs": jobs_status, 
+        "result": result,
+        "finished": finished,
     }), 200
 
 if __name__ == '__main__':

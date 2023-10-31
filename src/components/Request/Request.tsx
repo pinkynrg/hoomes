@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import { useEffect, useState } from 'react';
 import { Location, RequestResponse } from './../../types';
 import { useLocalStorage } from 'usehooks-ts';
-import { Select } from 'antd';
+import { TreeSelect } from 'antd';
 import { Button } from 'antd';
 import { Navigate } from 'react-router-dom';
 
@@ -12,28 +12,49 @@ interface RequestProps {
   className?: string
 }
 
+interface TreeSelectCity {
+  value: string,
+  title: string,
+  children?: TreeSelectCity[]
+}
+
 const Request = ({
   className,
 }: RequestProps) => {
-  const [locations, setLocations] = useLocalStorage<Location[]>('location', [])
+  const [citiesTree, setCitiesTree] = useLocalStorage<TreeSelectCity[]>('location', [])
   const [request, setRequest] = useLocalStorage<string | null>('requestUUID', null)
-  const [location, setLocation] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [codes, setCodes] = useState(null)
 
   const handleRequest = () => {
-    axios.post<RequestResponse>(`/v1/request`, { city: location }).then(response => {
-      setRequest(response.data.job_id)
-    }).catch(e => {
-      console.error(`there was an error fetching the data: ${e}`)
+    axios.post<RequestResponse>(`/v1/request`, { codes }).then(response => {
+      if (response.data.jobs_id) {
+        setRequest(response.data.jobs_id.join(','))
+      }
+    }).catch(() => {
+      setError("C'e' stato un errore. Prova a selezionare meno citta'.")
     })
   }
 
   useEffect(() => {
     axios.get<Location[]>(`/v1/locations`).then(response => {
-      setLocations(response.data)
+      const dataTree = response.data
+        .filter(value => value.nome === value.provincia_nome)
+        .map(province => ({
+          value: `${province.codice}!`,
+          title: province.nome,
+          children: response.data.filter(city => city.provincia_nome === province.nome)
+            .map(city => ({
+              value: city.codice,
+              title: city.nome,
+            }))
+        })
+      )
+      setCitiesTree(dataTree)
     }).catch(e => {
       console.error(`there was an error fetching the data: ${e}`)
     })
-  }, [setLocations])
+  }, [setCitiesTree])
 
   if (request) {
     return <Navigate to={`/listing/${request}`} replace />
@@ -47,17 +68,27 @@ const Request = ({
           Il processo potrebbe richiedere diversi minuti di attesa. 
           Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
         </p>
-        <Select
-          optionLabelProp='name'
+        { error && <span className={style.Error}> { error } </span> }
+        <TreeSelect
+          allowClear
           showSearch
-          onChange={setLocation}
-          filterOption={(input, option) => (option?.value.toLowerCase() ?? '').includes(input.toLowerCase())}
+          multiple
+          treeCheckable
+          filterTreeNode={(inputValue: string, treeNode: any) => {
+            const toLower = inputValue.toLowerCase()
+            return treeNode.title.toLowerCase().includes(toLower)}
+          }
+          maxTagCount={3}
+          autoClearSearchValue={false}
+          showCheckedStrategy='SHOW_CHILD'
+          style={{ width: '100%' }}
+          onChange={setCodes}
           placeholder="Seleziona una cittá"
-          options={locations.map(location => ({ label: location.nome, value: location.nome }))}
-          disabled={locations.length === 0}
+          treeData={citiesTree}
+          disabled={citiesTree.length === 0}
         />
         <Button 
-          disabled={!location}
+          disabled={!codes}
           onClick={handleRequest}
         > 
           Vai!

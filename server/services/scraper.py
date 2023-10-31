@@ -111,13 +111,10 @@ class Idealista:
 
     filtered = [e for e in result if e is not None]
     return "con-" + ",".join(filtered) + "/" if len(filtered) else None
-  
-  def get_provincia(nome):
-    location = Location.get(nome=nome)
-    return location.provincia_nome
 
   def fetch( 
       comune, 
+      provincia,
       min_price = 1,
       max_price = 1000000,
       min_size = 1,
@@ -126,8 +123,6 @@ class Idealista:
     ):
 
     collection = []
-    # TOFIX
-    province = Idealista.get_provincia(comune)
 
     def get_final_url(page):
 
@@ -141,7 +136,7 @@ class Idealista:
       
       return "/vendita-case/{comune}-{province}/{filters}lista-{page}.htm?ordine=pubblicazione-desc".format(
         comune=Idealista.format_name(comune),
-        province=Idealista.format_name(province),
+        province=Idealista.format_name(provincia),
         page = page,
         filters=filters or "", 
       )
@@ -156,6 +151,7 @@ class Idealista:
         mid_price = min_price+int((max_price-min_price)/2)
         collection += Idealista.fetch(
           comune=comune, 
+          provincia=provincia,
           min_price=min_price, 
           max_price=mid_price, 
           min_size=min_size, 
@@ -164,6 +160,7 @@ class Idealista:
         )
         collection += Idealista.fetch(
           comune=comune, 
+          provincia=provincia,
           min_price=mid_price, 
           max_price=max_price, 
           min_size=min_size, 
@@ -175,6 +172,7 @@ class Idealista:
           mid_size = min_size+int((max_size-min_size)/2)
           collection += Idealista.fetch(
             comune=comune, 
+            provincia=provincia,
             min_price=min_price, 
             max_price=max_price, 
             min_size=min_size, 
@@ -183,6 +181,7 @@ class Idealista:
           )
           collection += Idealista.fetch(
             comune=comune, 
+            provincia=provincia,
             min_price=min_price, 
             max_price=max_price, 
             min_size=mid_size, 

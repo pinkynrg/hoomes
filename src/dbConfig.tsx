@@ -9,7 +9,8 @@ interface Home {
   m2: number;
   price: number;
   comment: string;
-  comune: string;
+  city: string;
+  province: string;
   source: string;
   created_at: string;
   updated_at: string;
@@ -22,7 +23,7 @@ class Database extends Dexie {
     super("Hoomes");
     
     this.version(1).stores({
-      homes: 'uuid, url, image, title, location, m2, price, comment, comune, source, created_at, updated_at',
+      homes: 'uuid, url, image, title, location, m2, price, comment, city, province, source, created_at, updated_at',
     });
   }
 }
