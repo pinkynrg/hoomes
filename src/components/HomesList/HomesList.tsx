@@ -188,24 +188,28 @@ const HomesList = ({
               maxPrice,
             }}
           >
-            <InputNumber
-              className={style.InputNumber}
-              addonAfter="€"
-              style={{width: '100%'}}
-              controls={false}
-              placeholder='Min. Price'
-              formatter={value => value ? NumberFormatter.format(value) : ''}
-              parser={(value?: string) => value ? stringToNumber(value) : ''}
-            />
-            <InputNumber
-              className={style.InputNumber}
-              addonAfter="€"
-              style={{width: '100%'}}
-              controls={false}
-              placeholder='Max. Price'
-              formatter={value => value ? NumberFormatter.format(value) : ''}
-              parser={(value?: string) => value ? stringToNumber(value) : ''}
-            />
+            <Form.Item name="minPrice">
+              <InputNumber
+                className={style.InputNumber}
+                addonAfter="€"
+                style={{width: '100%'}}
+                controls={false}
+                placeholder='Min. Price'
+                formatter={value => value ? NumberFormatter.format(value) : ''}
+                parser={(value?: string) => value ? stringToNumber(value) : ''}
+              />
+            </Form.Item>
+            <Form.Item name="maxPrice">
+              <InputNumber
+                className={style.InputNumber}
+                addonAfter="€"
+                style={{width: '100%'}}
+                controls={false}
+                placeholder='Max. Price'
+                formatter={value => value ? NumberFormatter.format(value) : ''}
+                parser={(value?: string) => value ? stringToNumber(value) : ''}
+              />
+            </Form.Item>
             <Button 
               htmlType='submit' 
               onClick={() => setPriceOpened(false)}>
@@ -230,24 +234,28 @@ const HomesList = ({
               maxSize,
             }}
           >
-            <InputNumber
-              className={style.InputNumber}
-              addonAfter="m&sup2;"
-              style={{width: '100%'}}
-              controls={false}
-              placeholder='Min. Size'
-              formatter={value => value ? NumberFormatter.format(value) : ''}
-              parser={(value?: string) => value ? stringToNumber(value) : ''}
-            />
-            <InputNumber
-              className={style.InputNumber}
-              addonAfter="m&sup2;"
-              style={{width: '100%'}}
-              controls={false}
-              placeholder='Max. Size'
-              formatter={value => value ? NumberFormatter.format(value) : ''}
-              parser={(value?: string) => value ? stringToNumber(value) : ''}
-            />
+            <Form.Item name="minSize">
+              <InputNumber
+                className={style.InputNumber}
+                addonAfter="m&sup2;"
+                style={{width: '100%'}}
+                controls={false}
+                placeholder='Min. Size'
+                formatter={value => value ? NumberFormatter.format(value) : ''}
+                parser={(value?: string) => value ? stringToNumber(value) : ''}
+              />
+            </Form.Item>
+            <Form.Item name="maxSize">
+              <InputNumber
+                className={style.InputNumber}
+                addonAfter="m&sup2;"
+                style={{width: '100%'}}
+                controls={false}
+                placeholder='Max. Size'
+                formatter={value => value ? NumberFormatter.format(value) : ''}
+                parser={(value?: string) => value ? stringToNumber(value) : ''}
+              />
+            </Form.Item>
             <Button 
               htmlType='submit' 
               onClick={() => setSizeOpened(false)}>
