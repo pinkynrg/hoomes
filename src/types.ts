@@ -11,7 +11,7 @@ interface RequestResponseFailure {
   jobs_id: undefined,
   error: string,
   code: string,
-} 
+}
 
 type RequestResponse = RequestResponseFailure | RequestResponseSuccess
 
@@ -41,11 +41,11 @@ interface Location {
   popolazione: number;
 }
 
-interface HomeWithMatch extends Home { 
-  match: number 
+interface HomeWithMatch extends Home {
+  match: number
 }
 
-export type { 
+export type {
   Location,
   RequestResponse,
   JobStatusTypes,

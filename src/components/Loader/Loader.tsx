@@ -1,12 +1,12 @@
-import { useLocalStorage } from 'usehooks-ts';
-import style from './Loader.module.scss';
-import classnames from 'classnames';
-import axios from 'axios';
-import { useCallback, useEffect, useState } from 'react';
-import { JobsResponse } from '../../types';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Divider } from 'antd';
-import { db } from './../../dbConfig';
+import { useLocalStorage } from 'usehooks-ts'
+import classnames from 'classnames'
+import axios from 'axios'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Button, Divider } from 'antd'
+import { JobsResponse } from '../../types'
+import style from './Loader.module.scss'
+import { db } from '../../dbConfig'
 
 interface LoaderProps {
   className?: string
@@ -15,15 +15,14 @@ interface LoaderProps {
 const Loader = ({
   className,
 }: LoaderProps) => {
-
   const [, setRequest] = useLocalStorage<string | null>('requestUUID', null)
   const [status, setStatus] = useState<string | null>('idle')
-  const { jobUUID } = useParams();
-  const navigate = useNavigate();
+  const { jobUUID } = useParams()
+  const navigate = useNavigate()
 
   const fetchJobStatus = useCallback(() => {
     if (status !== 'finished') {
-      axios.get<JobsResponse>(`/v1/jobs/${jobUUID}`).then(response => {
+      axios.get<JobsResponse>(`/v1/jobs/${jobUUID}`).then((response) => {
         setStatus('processing')
         if (response.data.finished) {
           setStatus('finished')
@@ -32,17 +31,17 @@ const Loader = ({
           setRequest(null)
           navigate('/listing')
         }
-      }).catch(e => {
-        setStatus(e)  
+      }).catch((e) => {
+        setStatus(e)
       })
     }
   }, [jobUUID, navigate, setRequest, status])
 
   useEffect(() => {
-    const intervalId = setInterval(fetchJobStatus, 5000);
+    const intervalId = setInterval(fetchJobStatus, 5000)
     // Cleanup function to clear the interval when the component unmounts
     return () => {
-      clearInterval(intervalId);
+      clearInterval(intervalId)
     }
   }, [fetchJobStatus])
 
@@ -55,18 +54,21 @@ const Loader = ({
     <div className={classnames(style.Container, className)}>
       <div className={style.Panel}>
         <h1> Sto scaricando... </h1>
-        <p> 
+        <p>
           Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
-          <br/><br/>
-          Lo stato é <b>{status}</b>
+          <br />
+          <br />
+          Lo stato é
+          {' '}
+          <b>{status}</b>
         </p>
         <Divider className={style.Divider}> oppure </Divider>
-        <Button onClick={handleRequestAnotherCity} > 
-          Richiedi un'altra cittá
+        <Button onClick={handleRequestAnotherCity}>
+          Richiedi un&apos;altra cittá
         </Button>
       </div>
     </div>
   )
-};
+}
 
-export { Loader };
+export { Loader }

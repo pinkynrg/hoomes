@@ -1,14 +1,12 @@
-const percentage = (floatValue: number) => (floatValue * 100).toFixed(2) + "%";
+const percentage = (floatValue: number) => `${(floatValue * 100).toFixed(2)}%`
 
 const NumberFormatter = Intl.NumberFormat('it-IT')
 
-const EuroFormatter = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
+const EuroFormatter = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
 
-const stringToNumber = (formattedNumber: string) => {
-  return parseFloat(formattedNumber.replace(/[^\d]/g, ''));
-}
+const stringToNumber = (formattedNumber: string) => parseFloat(formattedNumber.replace(/[^\d]/g, ''))
 
-export { 
+export {
   percentage,
   EuroFormatter,
   NumberFormatter,

@@ -1,4 +1,4 @@
-import Dexie from 'dexie';
+import Dexie from 'dexie'
 
 interface Home {
   uuid: string;
@@ -17,18 +17,18 @@ interface Home {
 }
 
 class Database extends Dexie {
-  homes!: Dexie.Table<Home>;
-  
-  constructor() {  
-    super("Hoomes");
-    
+  homes!: Dexie.Table<Home>
+
+  constructor() {
+    super('Hoomes')
+
     this.version(1).stores({
       homes: 'uuid, url, image, title, location, m2, price, comment, city, province, source, created_at, updated_at',
-    });
+    })
   }
 }
 
-const db = new Database();
+const db = new Database()
 
 export type { Home }
 export { db }

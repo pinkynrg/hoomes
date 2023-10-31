@@ -1,0 +1,75 @@
+{
+  "extends": [
+      "react-app",
+      "react-app/jest",
+      "airbnb", 
+      "airbnb/hooks"
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".ts", ".tsx"]
+      }
+    }
+  },
+  "plugins": [
+      "testing-library",
+      "prefer-arrow"
+  ],
+  "parserOptions": {
+      "project": [
+          "./tsconfig.json"
+      ]
+  },
+  "rules": {
+      "react/require-default-props": "off",
+      "no-unused-vars": "off",
+      "import/no-unresolved": "off",
+      "react/react-in-jsx-scope": "off",
+      "import/prefer-default-export": "off",
+      "react/function-component-definition": "off",
+      "object-curly-newline": "off",
+      "react/jsx-filename-extension": "off",
+      "import/extensions": "off",
+      "testing-library/no-dom-import": "off",
+      "@typescript-eslint/naming-convention": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "jsx-a11y/click-events-have-key-events": "off",
+      "jsx-a11y/no-static-element-interactions": "off",
+      "jsx-a11y/no-noninteractive-element-interactions": "off",
+      "import/no-default-export": "error",
+      "import/no-extraneous-dependencies": 0,
+      "testing-library/await-async-query": "error",
+      "testing-library/no-await-sync-query": "error",
+      "testing-library/no-debugging-utils": "warn",
+      "no-console": "warn",
+      "no-param-reassign": ["error", { "props": true, "ignorePropertyModificationsFor": ["draft"] }],
+      "prefer-arrow/prefer-arrow-functions": ["error"],
+      "@typescript-eslint/no-explicit-any": "error",
+      "semi": ["error", "never"]
+  },
+  "overrides": [
+      {
+          "files": [
+              "**/__tests__/**/*.[jt]s?(x)",
+              "**/?(*.)+(spec|test).[jt]s?(x)"
+          ],
+          "extends": [
+              "plugin:testing-library/react"
+          ]
+      }
+  ],
+  "env": {
+      "jest": true
+  },
+  "ignorePatterns": ["**/scripts/*"],
+  "globals": {
+      "window": true,
+      "document": true,
+      "localStorage": true,
+      "Request": true,
+      "fetch": true,
+      "BeePlugin": true,
+      "Blob": true
+  }
+}
