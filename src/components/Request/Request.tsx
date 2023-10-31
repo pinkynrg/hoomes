@@ -39,11 +39,12 @@ const Request = ({
   useEffect(() => {
     axios.get<Location[]>(`/v1/locations`).then(response => {
       const dataTree = response.data
-        .filter(value => value.nome === value.provincia_nome)
+        .map(location => location.provincia_nome)
+        .filter((home, index, array) => array.indexOf(home) === index)
         .map(province => ({
-          value: `${province.codice}!`,
-          title: province.nome,
-          children: response.data.filter(city => city.provincia_nome === province.nome)
+          value: `${province}!`,
+          title: province,
+          children: response.data.filter(city => city.provincia_nome === province)
             .map(city => ({
               value: city.codice,
               title: city.nome,
