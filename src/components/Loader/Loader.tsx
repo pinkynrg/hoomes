@@ -3,7 +3,7 @@ import classnames from 'classnames'
 import axios from 'axios'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Divider } from 'antd'
+import { Button, Divider, Progress } from 'antd'
 import { JobsResponse } from '../../types'
 import style from './Loader.module.scss'
 import { db } from '../../dbConfig'
@@ -17,22 +17,27 @@ const Loader = ({
 }: LoaderProps) => {
   const [, setRequest] = useLocalStorage<string | null>('requestUUID', null)
   const [status, setStatus] = useState<string | null>('idle')
+  const [percentage, setPercentage] = useState(0)
   const { jobUUID } = useParams()
   const navigate = useNavigate()
 
   const fetchJobStatus = useCallback(() => {
-    if (status !== 'finished') {
+    if (status !== 'failed') {
       axios.get<JobsResponse>(`/v1/jobs/${jobUUID}`).then((response) => {
-        setStatus('processing')
+        setStatus('progress')
         if (response.data.finished) {
-          setStatus('finished')
           db.homes.clear()
           db.homes.bulkPut(response.data.result)
           setRequest(null)
           navigate('/listing')
+        } else {
+          const { jobs } = response.data
+          const finishedJobsCount = jobs.filter((job) => ['finished', 'failed'].includes(job.status)).length
+          const realPercentage = Math.floor((finishedJobsCount / jobs.length) * 100)
+          setPercentage(realPercentage)
         }
-      }).catch((e) => {
-        setStatus(e)
+      }).catch(() => {
+        setStatus('failed')
       })
     }
   }, [jobUUID, navigate, setRequest, status])
@@ -54,14 +59,14 @@ const Loader = ({
     <div className={classnames(style.Container, className)}>
       <div className={style.Panel}>
         <h1> Sto scaricando... </h1>
-        <p>
+        <div>
           Sei libero di attendere o chiudere la pagina e tornare piú tardi per controllare.
           <br />
           <br />
-          Lo stato é
-          {' '}
-          <b>{status}</b>
-        </p>
+          {
+            status !== 'idle' && <Progress percent={percentage} status="active" strokeColor={{ from: '#108ee9', to: '#87d068' }} />
+}
+        </div>
         <Divider className={style.Divider}> oppure </Divider>
         <Button onClick={handleRequestAnotherCity}>
           Richiedi un&apos;altra cittá
