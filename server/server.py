@@ -18,7 +18,7 @@ conn = redis.from_url('redis://{host}:{port}/0'.format(
 
 q = Queue(connection=conn, default_timeout=3600)
 
-MAX_JOBS = 50
+MAX_JOBS = 312
 
 ComuniItalia.fetch()
 
