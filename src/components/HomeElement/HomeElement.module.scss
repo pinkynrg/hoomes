@@ -1,116 +1,127 @@
-.Container {
-  border: 1px solid var(--neutral-2, #FAFAFA);
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  flex-direction: row;
-  gap: 24px;
+.Wrapper {
+  container-type: inline-size;
 
-  @media screen and (max-width: 1200px) {
-    flex-direction: column;
-  }
-  
-  .Image {
-    border-radius: 10px;
-    overflow: hidden;
-    width: 100%;
-    height: 200px;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
-  .Content {
+  .Container {
+    border: 1px solid var(--neutral-2, #FAFAFA);
+    border-radius: 8px;
+    padding: 16px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex: 1 0 0;
-    align-self: stretch;
-    gap: 16px;
-    min-width: 360px;
-
-    h1 {
-      color: var(--neutral-13, #000);
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 28px;
-      letter-spacing: 0.2px;
-      margin: 0;
-      margin-bottom: 8px;
-    }
-
-    .Location {
-      color: var(--neutral-7, #8C8C8C);
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 20px;
-      letter-spacing: 0.14px;
-      margin: 0;
-
-      svg {
-        margin-right: 4px;
+    flex-direction: row;
+    gap: 24px;
+    
+    .Image {
+      border-radius: 10px;
+      overflow: hidden;
+      min-width: 300px;
+      max-width: 400px;
+      height: 200px;
+  
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
     }
-
-    .Spec {
-      width: 100%;
+  
+    .Content {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex: 1 0 0;
+      align-self: stretch;
       gap: 16px;
-
-      span {
+      min-width: 360px;
+  
+      h1 {
+        color: var(--neutral-13, #000);
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 28px;
+        letter-spacing: 0.2px;
+        margin: 0;
+        margin-bottom: 8px;
+      }
+  
+      .Location {
         color: var(--neutral-7, #8C8C8C);
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 400;
         line-height: 20px;
-        letter-spacing: 0.16px;
-        vertical-align: middle;
-        text-align: center;
+        letter-spacing: 0.14px;
+        margin: 0;
+  
         svg {
           margin-right: 4px;
-          height: 20px;
         }
       }
-    }
-
-    .Footer {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-
-      .Match {
-        color: var(--neutral-1, #FFF);
-        border-radius: 100px;
-        text-align: center;
-        font-variant-numeric: lining-nums tabular-nums;
-        font-size: 16px;
-        font-weight: 600;
-        line-height: 20px;
+  
+      .Spec {
+        width: 100%;
         display: flex;
-        padding: 8px;
-        justify-content: center;
+        flex-direction: row;
+        gap: 16px;
+  
+        span {
+          color: var(--neutral-7, #8C8C8C);
+          font-size: 16px;
+          font-weight: 400;
+          line-height: 20px;
+          letter-spacing: 0.16px;
+          vertical-align: middle;
+          text-align: center;
+          svg {
+            margin-right: 4px;
+            height: 20px;
+          }
+        }
+      }
+  
+      .Footer {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
         align-items: center;
-        margin-right: auto;
-        
-        &.Good {
-          background: var(--polar-green-6, #52C41A);
-        }
-
-        &.Decent {
-          background: #e6802d;
-        }
-
-        &.Bad {
-          background: #F5222D;
+        justify-content: space-between;
+        gap: 8px;
+  
+        .Match {
+          color: var(--neutral-1, #FFF);
+          border-radius: 100px;
+          text-align: center;
+          font-variant-numeric: lining-nums tabular-nums;
+          font-size: 16px;
+          font-weight: 600;
+          line-height: 20px;
+          display: flex;
+          padding: 8px;
+          justify-content: center;
+          align-items: center;
+          margin-right: auto;
+          
+          &.Good {
+            background: var(--polar-green-6, #52C41A);
+          }
+  
+          &.Decent {
+            background: #e6802d;
+          }
+  
+          &.Bad {
+            background: #F5222D;
+          }
         }
       }
     }
   }
+
+  @container (width <= 660px) {
+    .Container {
+      flex-direction: column;
+      .Content {
+        min-width: auto;
+      }
+    }
+  }
+
 }

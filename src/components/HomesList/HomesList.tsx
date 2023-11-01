@@ -7,11 +7,13 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { HomeElement } from '../HomeElement/HomeElement'
 import { NoData } from '../Icons/NoData'
-import { db } from '../../dbConfig'
+import { Home, db } from '../../dbConfig'
 import { HomeWithMatch } from '../../types'
 import style from './HomesList.module.scss'
 import { PriceFilterDropdown } from './Dropdowns/PriceFilterDropdown'
 import { SizeFilterDropdown } from './Dropdowns/SizeFilterDropdown'
+import { Sorting } from '../Icons/Sorting'
+import { SortDropdown } from './Dropdowns/SortDropdown'
 
 interface HomesListProps {
   onPreview: (url: string) => void
@@ -30,8 +32,10 @@ const HomesList = ({
   const [maxPrice, setMaxPrice] = useState<string | undefined>()
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  const [sortBy, setSortBy] = useState<string>('match-desc')
   const [priceOpened, setPriceOpened] = useState<boolean>(false)
   const [sizeOpened, setSizeOpened] = useState<boolean>(false)
+  const [sortOpened, setSortOpened] = useState<boolean>(false)
 
   const scrollUp = () => {
     document.getElementById('list')?.scroll({ top: 0 })
@@ -67,6 +71,12 @@ const HomesList = ({
     setPageNumber(1)
     scrollUp()
     setSizeOpened(false)
+  }, [])
+
+  const onSort = useCallback((newSortBy: string) => {
+    setSortBy(newSortBy)
+    scrollUp()
+    setSortOpened(false)
   }, [])
 
   // Calculate the match score as a number between 0 and 1
@@ -133,8 +143,18 @@ const HomesList = ({
     match: searchWords.filter((word) => home.comment.includes(word)).length / searchWords.length,
   }))
 
+  const getSortingFunction = (key: string) => {
+    switch (key) {
+      case 'match-desc': return (a: HomeWithMatch, b: HomeWithMatch) => b.match - a.match
+      case 'price-asc': return (a: HomeWithMatch, b: HomeWithMatch) => a.price - b.price
+      case 'm2-desc': return (a: HomeWithMatch, b: HomeWithMatch) => b.m2 - a.m2
+      case 'price_per_meter-asc': return (a: HomeWithMatch, b: HomeWithMatch) => (a.price / a.m2) - (b.price / b.m2)
+      default: return (a: HomeWithMatch, b: HomeWithMatch) => b.match - a.match
+    }
+  }
+
   // sorting
-  const sortedHomes = homesWithMatch?.sort((a, b) => b.match - a.match)
+  const sortedHomes = homesWithMatch?.sort(getSortingFunction(sortBy))
 
   // Calculate the start and end indexes for the current page
   const startIndex = (pageNumber - 1) * pageSize
@@ -159,15 +179,27 @@ const HomesList = ({
     />
   ), [maxSize, minSize, onSize])
 
+  const getSortDropdown = useCallback(() => (
+    <SortDropdown
+      sortBy={sortBy}
+      onSubmit={onSort}
+    />
+  ), [sortBy, onSort])
+
   return (
     <div className={classnames(style.Container, className)}>
       <div className={style.Filters}>
+        <Input
+          prefix={<SearchOutlined />}
+          placeholder="Cerca"
+          onChange={onSearch}
+        />
         <TreeSelect
           allowClear
           showSearch
           multiple
           treeCheckable
-          style={{ minWidth: '150px' }}
+          style={{ minWidth: '130px' }}
           dropdownStyle={{ width: '250px' }}
           filterTreeNode={(inputValue, treeNode) => {
             const toLower = inputValue.toLowerCase()
@@ -178,14 +210,9 @@ const HomesList = ({
           autoClearSearchValue={false}
           showCheckedStrategy="SHOW_CHILD"
           onChange={onLocationsChange}
-          placeholder="Seleziona una cittá"
+          placeholder="Seleziona cittá"
           treeData={citiesTree}
           disabled={citiesTree.length === 0}
-        />
-        <Input
-          prefix={<SearchOutlined />}
-          placeholder="Scrivi parole, per esempio 'travi vista' oppure 'signorile'"
-          onChange={onSearch}
         />
         <Dropdown
           placement="bottom"
@@ -204,6 +231,17 @@ const HomesList = ({
           dropdownRender={getSizeFilterDropdown}
         >
           <Button onClick={() => setSizeOpened(!sizeOpened)}>m&sup2;</Button>
+        </Dropdown>
+        <Dropdown
+          placement="bottom"
+          trigger={['click']}
+          open={sortOpened}
+          onOpenChange={setSortOpened}
+          dropdownRender={getSortDropdown}
+        >
+          <Button>
+            <Icon component={Sorting} />
+          </Button>
         </Dropdown>
       </div>
       {

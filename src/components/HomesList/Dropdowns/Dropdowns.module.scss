@@ -8,4 +8,21 @@
   justify-content: center;
   gap: 8px;
   border: 1px solid #ddd;
+
+  div {
+    margin: 0;
+  }
+}
+.SortDropdown {
+  background-color: #fff;
+  width: 150px;
+  border: 1px solid #ddd;
+
+  .ListElement {
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .ListElement:not(:last-child) {
+    border-bottom: 1px solid #eeeeee;
+  }
 }

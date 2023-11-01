@@ -16,7 +16,7 @@ conn = redis.from_url('redis://{host}:{port}/0'.format(
     port=os.environ.get('REDIS_PORT', '6379'),
 ))
 
-q = Queue(connection=conn, default_timeout=3600, result_ttl=86400)
+q = Queue(connection=conn, default_timeout=3600)
 
 MAX_JOBS = 50
 
@@ -93,7 +93,7 @@ def initiate_job():
     # Enqueue the scrape job
     jobs = []
     for coordinate in coordinates: 
-      jobs += [q.enqueue(fetch_homes, args=coordinate)]
+      jobs += [q.enqueue(fetch_homes, args=coordinate, result_ttl=86400)]
 
     # Respond with a message indicating the job has been accepted
     response_message = {

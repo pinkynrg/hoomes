@@ -7,6 +7,10 @@
   .HomesList {
     width: 740px;
     margin: auto;
+
+    @media screen and (max-width: 1200px) {
+      width: 100%;
+    }
   }
 
   .EmptyState {
