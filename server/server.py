@@ -4,7 +4,6 @@ from rq import Queue
 import http.client
 import redis
 import os
-from services.scraper import Idealista
 from playhouse.shortcuts import model_to_dict
 from services.scraper import ComuniItalia
 from jobs import fetch_homes
@@ -85,7 +84,7 @@ def initiate_job():
       coordinates = []
       for city_code in city_codes:
         location = Location.get(codice=city_code)
-        coordinates += [(location.nome, location.provincia_nome)]
+        coordinates += [(location,)]
     except Exception:
       response_message = {'error': 'One or more codes were not valid', 'code': 'E003'}
       return jsonify(response_message), 400
