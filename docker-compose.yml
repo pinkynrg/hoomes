@@ -18,6 +18,8 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv4.conf.all.rp_filter=2
       - net.ipv6.conf.all.disable_ipv6=1
+    networks:
+      - external_network
 
   backend:
     container_name: hoomes_backend
@@ -33,6 +35,8 @@ services:
     depends_on:
       - redis
       - vpn
+    networks:
+      - external_network
 
   frontend:
     container_name: hoomes_frontend
@@ -42,6 +46,8 @@ services:
     depends_on:
       - backend
       - vpn
+    networks:
+      - external_network
 
   worker:
     container_name: hoomes_workers
@@ -57,6 +63,8 @@ services:
     depends_on:
       - redis
       - vpn
+    networks:
+      - external_network
 
   redis:
     container_name: redis
@@ -65,19 +73,9 @@ services:
     network_mode: service:vpn
     depends_on:
       - vpn
+    networks:
+      - external_network
 
-  https:
-    container_name: https
-    image: steveltn/https-portal:1
-    ports:
-      - '80:80'
-      - '443:443'
-    restart: always
-    environment:
-      STAGE: 'production'
-      PROXY_READ_TIMEOUT: 3600
-      CLIENT_MAX_BODY_SIZE: 0
-      SERVER_NAMES_HASH_BUCKET_SIZE: 64
-      DOMAINS: 'hoomes.me -> http://frontend:80'
-    volumes:
-      - ./ssl-certs:/var/lib/https-portal
+networks:
+  external_network:
+    external: true
