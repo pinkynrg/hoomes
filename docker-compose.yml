@@ -1,7 +1,7 @@
 services:
 
   vpn:
-    container_name: vpn
+    container_name: hoomes_vpn
     hostname: vpn
     image: ghcr.io/bubuntux/nordlynx
     ports:
@@ -60,7 +60,7 @@ services:
       - vpn
 
   redis:
-    container_name: redis
+    container_name: hoomes_redis
     image: redis:7.2.2
     restart: always
     network_mode: service:vpn
