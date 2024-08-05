@@ -20,7 +20,7 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
 
   backend:
-    container_name: backend
+    container_name: hoomes_backend
     image: pinkynrg/hoomes_backend
     environment:
       REDIS_HOST: localhost
@@ -35,18 +35,16 @@ services:
       - vpn
 
   frontend:
-    container_name: frontend
+    container_name: hoomes_frontend
     image: pinkynrg/hoomes_frontend
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "8000:80"
     depends_on:
       - backend
       - vpn
 
   worker:
-    container_name: hoomes-workers
+    container_name: hoomes_workers
     image: pinkynrg/hoomes_backend
     environment:
       REDIS_HOST: localhost

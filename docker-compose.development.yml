@@ -20,7 +20,7 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
 
   backend:
-    container_name: backend
+    container_name: hoomes_backend
     build:
       context: .
       dockerfile: ./Dockerfile.backend
@@ -37,7 +37,7 @@ services:
       - vpn
 
   frontend:
-    container_name: frontend
+    container_name: hoomes_frontend
     ports:
       - "80:80"
     build:
@@ -50,7 +50,7 @@ services:
       - vpn
 
   worker:
-    container_name: hoomes-workers
+    container_name: hoomes_workers
     build:
       context: .
       dockerfile: ./Dockerfile.backend
