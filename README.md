@@ -11,15 +11,15 @@ and the file needs to be patched accordingly to only test the needed code
 
 ```
 // build the image
-docker-compose -f docker-compose.development.yml build
+docker compose -f docker-compose.development.yml build
 
 // start container 
-docker-compose -f docker-compose.development.yml up -d
+docker compose -f docker-compose.development.yml up -d
 
 // install dependencies 
 docker exec -ti hoomes_backend poetry add something
 
-// start server (should be already started when executing docker-compose up)
+// start server (should be already started when executing docker compose up)
 docker exec -ti hoomes_backend poetry run python server.py
 
 // start worker

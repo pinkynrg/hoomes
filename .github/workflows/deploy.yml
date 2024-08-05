@@ -61,7 +61,7 @@ jobs:
           source: "docker-compose.yml,shell.db"
           target: "~/hoomes"
 
-      - name: executing docker-compose stuff on remove host
+      - name: executing docker compose stuff on remove host
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOOMES_SSH_HOST }}
@@ -71,6 +71,6 @@ jobs:
           script: |
             cd hoomes
             [ -e "data.db" ] && rm "shell.db" || mv "shell.db" "data.db"
-            docker-compose down 
-            docker-compose pull
-            NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }} docker-compose up -d
+            docker compose down 
+            docker compose pull
+            NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }} docker compose up -d
