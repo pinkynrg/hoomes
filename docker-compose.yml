@@ -1,4 +1,3 @@
-version: '3.8'
 services:
 
   vpn:
@@ -18,8 +17,6 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv4.conf.all.rp_filter=2
       - net.ipv6.conf.all.disable_ipv6=1
-    networks:
-      - external_network
 
   backend:
     container_name: hoomes_backend
@@ -35,8 +32,6 @@ services:
     depends_on:
       - redis
       - vpn
-    networks:
-      - external_network
 
   frontend:
     container_name: hoomes_frontend
@@ -63,8 +58,6 @@ services:
     depends_on:
       - redis
       - vpn
-    networks:
-      - external_network
 
   redis:
     container_name: redis
@@ -73,8 +66,6 @@ services:
     network_mode: service:vpn
     depends_on:
       - vpn
-    networks:
-      - external_network
 
 networks:
   external_network:
