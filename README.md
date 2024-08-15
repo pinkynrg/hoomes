@@ -29,27 +29,6 @@ We've made setting up Hoomes a breeze with Docker. Just follow these simple step
    docker compose -f docker-compose.development.yml up -d
    ```
    
-3. **Start the server**  
-   The server should start automatically when you bring up the Docker container. But if you need to restart it, you can run:
-   ```bash
-   docker exec -ti hoomes_backend poetry run python server.py
-   ```
-
-4. **Start the worker**  
-   ```bash
-   docker exec -ti hoomes_workers poetry run python worker.py
-   ```
-
-### Running Tests
-
-To test the dispatcher, use:
-
-```bash
-poetry run python server.py
-```
-
-Make sure to patch the relevant files to test only the necessary code.
-
 ## 🛠️ Future Enhancements
 
 Hoomes is designed with scalability in mind. We aim to integrate additional real estate platforms, making it easier than ever to find your dream home in Italy. Stay tuned for updates and new features!
