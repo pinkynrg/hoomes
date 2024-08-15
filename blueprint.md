@@ -2,6 +2,8 @@
 
 Welcome to **Hoomes**, the ultimate tool for scraping and searching homes for sale in Italy! Whether you're dreaming of a cozy Tuscan villa, a chic Milanese apartment, or a seaside retreat in Sicily, Hoomes has you covered. Currently, it supports scraping data from [Idealista](https://www.idealista.it/) and [Caaasa.it](https://www.caasa.it/), with plans to extend to other leading real estate platforms. 
 
+![demo](https://github.com/pinkynrg/Hoomes/blob/main/demo.gif)
+
 ## 🌟 What Hoomes Does
 
 Hoomes pulls listings from popular Italian real estate platforms and allows you to perform powerful full-text searches across the descriptions of each scraped property. Imagine being able to search for keywords like "panoramic view," "garden," or "historical center" across thousands of listings in seconds!
