@@ -12,6 +12,7 @@
     .Image {
       border-radius: 10px;
       overflow: hidden;
+      min-width: 300px;
       max-width: 400px;
       height: 200px;
   
@@ -30,7 +31,6 @@
       flex: 1 0 0;
       align-self: stretch;
       gap: 16px;
-      min-width: 360px;
   
       h1 {
         color: var(--neutral-13, #000);
