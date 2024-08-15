@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { HomeElement } from '../HomeElement/HomeElement'
 import { NoData } from '../Icons/NoData'
-import { Home, db } from '../../dbConfig'
+import { db } from '../../dbConfig'
 import { HomeWithMatch } from '../../types'
 import style from './HomesList.module.scss'
 import { PriceFilterDropdown } from './Dropdowns/PriceFilterDropdown'
@@ -140,7 +140,9 @@ const HomesList = ({
   // add match index to homes
   const homesWithMatch: HomeWithMatch[] | undefined = homesMatchingSearch?.map((home) => ({
     ...home,
-    match: searchWords.filter((word) => home.comment.includes(word)).length / searchWords.length,
+    match: searchWords.length
+      ? searchWords.filter((word) => home.comment.includes(word)).length / searchWords.length
+      : 1,
   }))
 
   const getSortingFunction = (key: string) => {

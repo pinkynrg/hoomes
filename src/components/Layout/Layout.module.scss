@@ -1,10 +1,16 @@
 .Layout {
   display: flex;
   flex-direction: column;
+  background-image: url('http://127.0.0.1:3000/background-1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   .Header {
     display: flex;
     height: 60px;
     justify-content: center;
+    background-color: rgba(255, 255, 255, 0.7);
     .Left {
       flex: 1;
       display: flex;
