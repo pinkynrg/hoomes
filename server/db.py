@@ -36,6 +36,16 @@ class Location(Model):
         database = db
         table_name = 'locations'
 
+    def get_nome_for(self, source):
+        return self.nome
+    
+    def get_provincia_nome_for(self, source):
+        if source == 'caasa.it':
+            if self.provincia_nome == "Reggio nell'Emilia":
+                return 'Reggio Emilia'
+        return self.nome
+
+
 class House(Model):
     uuid = CharField(primary_key=True)
     url = CharField()

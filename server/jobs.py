@@ -6,8 +6,8 @@ from db import Location
 from peewee import fn
 
 def fetch_homes(location: Location): 
-  # Check if the lowest updated_at of House is > 1 day ago
-    one_day_ago = datetime.now() - timedelta(days=1)
+    # Check if the lowest updated_at of House is > 1 day ago
+    one_day_ago = datetime.now() - timedelta(seconds=60)
     lowest_updated_at = House.select(fn.Min(House.updated_at)).where((House.city == location.nome) & (House.province == location.provincia_nome)).scalar()
 
     if lowest_updated_at is None or lowest_updated_at < one_day_ago:

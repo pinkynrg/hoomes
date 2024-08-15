@@ -20,7 +20,7 @@ interface TreeSelectCity {
 const Request = ({
   className,
 }: RequestProps) => {
-  const [citiesTree, setCitiesTree] = useLocalStorage<TreeSelectCity[]>('location', [])
+  const [citiesTree, setCitiesTree] = useState<TreeSelectCity[]>([])
   const [request, setRequest] = useLocalStorage<string | null>('requestUUID', null)
   const [error, setError] = useState<string | null>(null)
   const [codes, setCodes] = useState(null)

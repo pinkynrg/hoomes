@@ -10,11 +10,6 @@ import re
 class ComuniItalia: 
   HOST = "raw.githubusercontent.com"
 
-  def trasform_city_name(name):
-    if name == "Reggio nell'Emilia":
-      return "Reggio Emilia"
-    return name
-
   def fetch():
     html_text = get(ComuniItalia.HOST, "matteocontrini/comuni-json/master/comuni.json")
     json_string = unidecode(html_text)
@@ -23,14 +18,14 @@ class ComuniItalia:
       upsert_record(
           Location,
           'codice',
-          nome=ComuniItalia.trasform_city_name(comune.get('nome', '')),
+          nome=comune.get('nome', ''),
           codice=comune.get('codice', ''),
           zona_codice=comune['zona']['codice'] if 'zona' in comune else None,
           zona_nome=comune['zona']['nome'] if 'zona' in comune else None,
           regione_codice=comune['regione']['codice'] if 'regione' in comune else None,
           regione_nome=comune['regione']['nome'] if 'regione' in comune else None,
           provincia_codice=comune['provincia']['codice'] if 'provincia' in comune else None,
-          provincia_nome=ComuniItalia.trasform_city_name(comune['provincia']['nome'] if 'provincia' in comune else None),
+          provincia_nome=comune['provincia']['nome'] if 'provincia' in comune else None,
           sigla=comune.get('sigla', ''),
           codiceCatastale=comune.get('codiceCatastale', ''),
           cap=comune['cap'] if 'cap' in comune else None,
@@ -251,13 +246,18 @@ class Caasa:
       return None
     
     def get_comment(soup):
-      return soup.find('div', attrs={"class": "opinion-main-text"}).get_text(strip=True)
+      return " ".join(soup.find('div', attrs={"class": "opinion-main-text"}).stripped_strings)
+    
+    def generate_readable_title(url, comune):
+      match = re.search(r'-([a-zA-Z0-9]*\d+[a-zA-Z0-9]*)-', url)
+      uuid = match.group(1) if match else 'N/A'
+      return f"{comune} (Caasa.it ID: {uuid})"
 
     try:
       html_text = get(Caasa.HOST, page_link)
       soup = BeautifulSoup(html_text, "html.parser")
       price = get_value_from_label(soup, "Prezzo")
-      title = page_link
+      title = generate_readable_title(page_link, comune)
       location = get_value_from_label(soup, "Zona OMI")
       comment = get_comment(soup)
       m2_string = get_value_from_label(soup, "Superficie")
@@ -341,13 +341,15 @@ class Caasa:
         max_size = max_size,
       )
 
-      return "/{province}/{comune}/{types}/in-vendita.html?page={page}&{filters}".format(
-        province=Caasa.format_name(location.provincia_nome),
-        comune=Caasa.format_name(location.nome),
+      url = "/{province}/{comune}/{types}/in-vendita.html?page={page}&{filters}".format(
+        province=Caasa.format_name(location.get_provincia_nome_for('caasa.it')),
+        comune=Caasa.format_name(location.get_nome_for('caasa.it')),
         types='-o-'.join(Caasa.ELEMENT_TYPES),
         filters=filters,
         page = page,
       )
+
+      return url 
     
     def get_house_link(item_html):
       fav_container = item_html.find("div", attrs={"class": "favorite-add"})
@@ -410,7 +412,7 @@ class Caasa:
         # Create a new function that takes both fixed_param and link
         get_house_data_with_meta = partial(
         Caasa.get_house_data, 
-          location.nome,
+          location.get_nome_for('caasa.it'),
         )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
