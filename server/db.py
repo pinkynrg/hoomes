@@ -43,7 +43,7 @@ class Location(Model):
         if source == 'caasa.it':
             if self.provincia_nome == "Reggio nell'Emilia":
                 return 'Reggio Emilia'
-        return self.nome
+        return self.provincia_nome
 
 
 class House(Model):
