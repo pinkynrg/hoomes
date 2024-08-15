@@ -1,7 +1,7 @@
 import axios from 'axios'
 import classnames from 'classnames'
 import { useEffect, useState } from 'react'
-import { useLocalStorage } from 'usehooks-ts'
+import { useLocalStorage, useSessionStorage } from 'usehooks-ts'
 import { TreeSelect, Button } from 'antd'
 import { Navigate } from 'react-router-dom'
 import { Location, RequestResponse } from '../../types'
@@ -24,6 +24,7 @@ const Request = ({
   const [request, setRequest] = useLocalStorage<string | null>('requestUUID', null)
   const [error, setError] = useState<string | null>(null)
   const [codes, setCodes] = useState(null)
+  const [_, setUrl] = useSessionStorage<string | null>('url', null)
 
   const handleRequest = () => {
     axios.post<RequestResponse>('/v1/request', { codes }).then((response) => {
@@ -54,6 +55,10 @@ const Request = ({
       console.error(`there was an error fetching the data: ${e}`)
     })
   }, [setCitiesTree])
+
+  useEffect(() => {
+    setUrl(null)
+  }, [setUrl])
 
   if (request) {
     return <Navigate to={`/listing/${request}`} replace />
