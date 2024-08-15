@@ -6,7 +6,7 @@ services:
     hostname: vpn
     image: ghcr.io/bubuntux/nordlynx
     ports:
-      - "5000:5000"
+      - "5001:5001"
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
