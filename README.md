@@ -17,17 +17,13 @@ cd hoomes
 
 ### Bootstrap Your Development Environment
 
-We've made setting up Hoomes a breeze with Docker. Just follow these simple steps:
+To kickstart your development environment, use the following command:
 
-1. **Build the Docker image**  
-   ```bash
-   docker compose -f docker-compose.development.yml build
-   ```
+```bash
+npm start
+```
 
-2. **Start the container**  
-   ```bash
-   docker compose -f docker-compose.development.yml up -d
-   ```
+This command will start all necessary services concurrently, ensuring that your development environment is fully operational with a single command. The `concurrently` package is used under the hood to run multiple npm scripts simultaneously, streamlining your workflow and minimizing setup time.
    
 ## 🛠️ Future Enhancements
 
