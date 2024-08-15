@@ -23,7 +23,6 @@ const Layout = () => {
           <h1>
             Hoomes
             <span>.</span>
-            me
           </h1>
         </div>
         <div className={style.Right} />
