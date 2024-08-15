@@ -28,19 +28,14 @@ We've made setting up Hoomes a breeze with Docker. Just follow these simple step
    ```bash
    docker compose -f docker-compose.development.yml up -d
    ```
-
-3. **Install dependencies**  
-   ```bash
-   docker exec -ti hoomes_backend poetry add [dependency]
-   ```
-
-4. **Start the server**  
+   
+3. **Start the server**  
    The server should start automatically when you bring up the Docker container. But if you need to restart it, you can run:
    ```bash
    docker exec -ti hoomes_backend poetry run python server.py
    ```
 
-5. **Start the worker**  
+4. **Start the worker**  
    ```bash
    docker exec -ti hoomes_workers poetry run python worker.py
    ```
