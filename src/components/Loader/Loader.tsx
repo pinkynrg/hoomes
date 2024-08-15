@@ -26,7 +26,6 @@ const Loader = ({
       axios.get<JobsResponse>(`/v1/jobs/${jobUUID}`).then((response) => {
         setStatus('progress')
         if (response.data.finished) {
-          // db.homes.clear()
           db.homes.bulkPut(response.data.result)
           setRequest(null)
           navigate('/listing')

@@ -28,12 +28,20 @@
     padding: 16px;
 
     .ResultCounter {
-      margin: 0 4px;
+      margin-right: 4px;
     }
 
     .NewRequestLink {
       text-decoration: none;
       color: #1890FF;
+      margin-right: 4px;
+      cursor: pointer;
+    }
+    .EmptyDB {
+      text-decoration: none;
+      color: #1890FF;
+      margin-right: 4px;
+      cursor: pointer;
     }
   }
 

@@ -256,8 +256,11 @@ const HomesList = ({
               Risultati |
             </span>
             <Link className={style.NewRequestLink} to="/request">
-              Richiedi altre cittá
+              Richiedi altre cittá |
             </Link>
+            <span className={style.EmptyDB} onClick={() => db.homes.clear()}>
+              Svuota local DB
+            </span>
           </div>
           )
       }
