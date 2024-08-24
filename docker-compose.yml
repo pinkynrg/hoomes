@@ -2,9 +2,9 @@ services:
 
   vpn:
     container_name: hoomes_vpn
+    image: ghcr.io/bubuntux/nordlynx
     restart: always
     hostname: vpn
-    image: ghcr.io/bubuntux/nordlynx
     ports:
       - "5001:5001"
     cap_add:
@@ -20,15 +20,14 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
 
   backend:
-    restart: always
     container_name: hoomes_backend
     image: pinkynrg/hoomes_backend
+    restart: always
     environment:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
     network_mode: service:vpn
     command: poetry run python server.py
-    restart: always
     volumes:
       - ./data.db:/app/data.db
     depends_on:
@@ -36,9 +35,9 @@ services:
       - vpn
 
   frontend:
-    restart: always
     container_name: hoomes_frontend
     image: pinkynrg/hoomes_frontend
+    restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -48,9 +47,9 @@ services:
       - external_network
 
   worker:
-    restart: always
     container_name: hoomes_workers
     image: pinkynrg/hoomes_backend
+    restart: always
     environment:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
