@@ -55,7 +55,6 @@ services:
       REDIS_PORT: 6379
     command: poetry run python worker.py
     network_mode: service:vpn
-    restart: always
     volumes:
       - ./data.db:/app/data.db
     depends_on:
