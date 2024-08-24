@@ -2,6 +2,7 @@ services:
 
   vpn:
     container_name: hoomes_vpn
+    restart: always
     hostname: vpn
     image: ghcr.io/bubuntux/nordlynx
     ports:
@@ -19,6 +20,7 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
 
   backend:
+    restart: always
     container_name: hoomes_backend
     image: pinkynrg/hoomes_backend
     environment:
@@ -34,6 +36,7 @@ services:
       - vpn
 
   frontend:
+    restart: always
     container_name: hoomes_frontend
     image: pinkynrg/hoomes_frontend
     extra_hosts:
@@ -45,6 +48,7 @@ services:
       - external_network
 
   worker:
+    restart: always
     container_name: hoomes_workers
     image: pinkynrg/hoomes_backend
     environment:
