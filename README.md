@@ -3,8 +3,7 @@
 
 # ➤ 🏡 Hoomes: Your Gateway to Italian Real Estate 🏡
 
-
-Welcome to **Hoomes**,, a tool for scraping and searching homes for sale in Italy. Hoomes helps users find properties by gathering data from leading real estate platforms like [Idealista](https://www.idealista.it/) and [Caaasa.it](https://www.caasa.it/). What sets Hoomes apart is its ability to search within property comments, giving you deeper insights into listings. Whether you're browsing or searching for something specific, Hoomes provides the information you need to make informed decisions.
+Welcome to **Hoomes**, a tool for scraping and searching homes for sale in Italy. Hoomes helps users find properties by gathering data from leading real estate platforms like [Idealista](https://www.idealista.it/) and [Caaasa.it](https://www.caasa.it/). What sets Hoomes apart is its ability to search within property comments, giving you deeper insights into listings. Whether you're browsing or searching for something specific, Hoomes provides the information you need to make informed decisions.
 
 ![demo](https://github.com/pinkynrg/Hoomes/blob/main/demo.gif)
 
@@ -22,6 +21,14 @@ When you make a request, Hoomes scrapes the data on-demand, so it may take a bit
 
 ## ➤ 🚀 Getting Started
 
+### Requirments
+
+Make sure to install all the necessary dependencies:
+
+- **Docker**: Required for containerization and easy environment setup.
+- **Poetry**: A tool for managing Python dependencies and virtual environments.
+
+
 ### Clone the Repository
 
 ```bash
@@ -29,16 +36,26 @@ git clone https://github.com/yourusername/hoomes.git
 cd hoomes
 ```
 
-### Bootstrap Your Development Environment
+To install npm packages:
 
-To kickstart your development environment, use the following command:
+```bash
+npm install
+```
+
+To install pip packages:
+
+```bash
+cd server && poetry install && cd..
+```
+
+### Start the Project
+
+To start the project, use the following command:
 
 ```bash
 npm start
 ```
 
-This command will start all necessary services concurrently, ensuring that your development environment is fully operational with a single command. The `concurrently` package is used under the hood to run multiple npm scripts simultaneously, streamlining your workflow and minimizing setup time.
-   
 
 [![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#-future-enhancements)
 

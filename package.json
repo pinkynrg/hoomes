@@ -54,7 +54,7 @@
     "xcase": "^2.0.1"
   },
   "scripts": {
-    "start": "concurrently --names 'frontend, backend, workers' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run start-frontend\" \"npm run start-backend\"  \"npm run start-workers\"",
+    "start": "concurrently --names 'frontend, backend, workers,   redis' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold,bgYellow.bold' \"npm run start-frontend\" \"npm run start-backend\"  \"npm run start-workers\"   \"docker compose -f docker-compose.development.yml up\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
