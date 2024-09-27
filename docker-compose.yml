@@ -29,7 +29,7 @@ services:
     network_mode: service:vpn
     command: poetry run python server.py
     volumes:
-      - ./data.db:/app/data.db
+      - /opt/hoomes/data.db:/app/data.db
     depends_on:
       - redis
       - vpn
@@ -44,7 +44,7 @@ services:
     command: poetry run python worker.py
     network_mode: service:vpn
     volumes:
-      - ./data.db:/app/data.db
+      - /opt/hoomes/data.db:/app/data.db
     depends_on:
       - redis
       - vpn
