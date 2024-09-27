@@ -50,7 +50,7 @@ jobs:
       
       - name: Pull and Redeploy
         run: |
-            curl  --location --request PUT 'https://portainer.francescomeli.com/api/stacks/12/git/redeploy?endpointId=2' \
+            curl  --location --request PUT 'https://portainer.francescomeli.com/api/stacks/25/git/redeploy?endpointId=2' \
                   --header 'X-API-Key: ${{ secrets.PORTAINER_TOKEN }}' \
                   --header 'Content-Type: application/json' \
                   --data '{
