@@ -34,18 +34,6 @@ services:
       - redis
       - vpn
 
-  frontend:
-    container_name: hoomes_frontend
-    image: pinkynrg/hoomes_frontend
-    restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - backend
-      - vpn
-    networks:
-      - external_network
-
   worker:
     container_name: hoomes_workers
     image: pinkynrg/hoomes_backend
@@ -68,7 +56,20 @@ services:
     network_mode: service:vpn
     depends_on:
       - vpn
+  
+
+  frontend:
+    container_name: hoomes_frontend
+    image: pinkynrg/hoomes_frontend
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - backend
+      - vpn
+    networks:
+      - hoomes
 
 networks:
-  external_network:
-    external: true
+  hoomes:
+    driver: bridge

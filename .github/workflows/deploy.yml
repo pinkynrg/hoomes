@@ -48,29 +48,15 @@ jobs:
 
     steps:
       
-      - name: checking out project
-        uses: actions/checkout@v2
-
-      - name: copy file via ssh password
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.HOOMES_SSH_HOST }}
-          username: ${{ secrets.HOOMES_SSH_USER }}
-          password: ${{ secrets.HOOMES_SSH_PASSWORD }}
-          port: ${{ secrets.HOOMES_SSH_PORT }}
-          source: "docker-compose.yml,shell.db"
-          target: "~/hoomes"
-
-      - name: executing docker compose stuff on remove host
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.HOOMES_SSH_HOST }}
-          username: ${{ secrets.HOOMES_SSH_USER }}
-          password: ${{ secrets.HOOMES_SSH_PASSWORD }}
-          port: ${{ secrets.HOOMES_SSH_PORT }}
-          script: |
-            cd hoomes
-            [ -e "data.db" ] && rm "shell.db" || mv "shell.db" "data.db"
-            docker compose down 
-            docker compose pull
-            NORD_VPN_PRIVATE_KEY=${{ secrets.NORD_VPN_PRIVATE_KEY }} docker compose up -d
+      - name: Pull and Redeploy
+        run: |
+            curl  --location --request PUT 'https://portainer.francescomeli.com/api/stacks/12/git/redeploy?endpointId=2' \
+                  --header 'X-API-Key: ${{ secrets.PORTAINER_TOKEN }}' \
+                  --header 'Content-Type: application/json' \
+                  --data '{
+                    "pullImage": true,
+                    "RepositoryAuthentication": true,
+                    "env":[
+                      {"name":"NORD_VPN_PRIVATE_KEY","value": "${{ secrets.NORD_VPN_PRIVATE_KEY }}" }
+                    ]
+                  }'
