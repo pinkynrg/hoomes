@@ -1,38 +1,18 @@
 services:
-
-  # vpn:
-  #   container_name: hoomes_vpn
-  #   image: ghcr.io/bubuntux/nordlynx
-  #   restart: always
-  #   hostname: vpn
-  #   ports:
-  #     - "5001:5001"
-  #   cap_add:
-  #     - NET_ADMIN
-  #     - SYS_MODULE
-  #   environment:
-  #     - PRIVATE_KEY=$NORD_VPN_PRIVATE_KEY
-  #     - QUERY=filters\[country_id\]=106 # ITALY
-  #     - NET_LOCAL=192.168.0.0/16
-  #   sysctls:
-  #     - net.ipv4.conf.all.src_valid_mark=1
-  #     - net.ipv4.conf.all.rp_filter=2
-  #     - net.ipv6.conf.all.disable_ipv6=1
-
   backend:
     container_name: hoomes_backend
     image: pinkynrg/hoomes_backend
     restart: always
+    ports:
+      - "5001:5001"
     environment:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
     command: poetry run python server.py
     volumes:
       - /opt/hoomes/data.db:/app/data.db
-    # network_mode: service:vpn
     depends_on:
       - redis
-      # - vpn
 
   worker:
     container_name: hoomes_workers
@@ -44,19 +24,13 @@ services:
     command: poetry run python worker.py
     volumes:
       - /opt/hoomes/data.db:/app/data.db
-    # network_mode: service:vpn
     depends_on:
       - redis
-      # - vpn
 
   redis:
     container_name: hoomes_redis
     image: redis:7.2.2
     restart: always
-    # network_mode: service:vpn
-    # depends_on:
-    #   - vpn
-  
 
   frontend:
     container_name: hoomes_frontend
@@ -66,4 +40,3 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - backend
-      # - vpn
