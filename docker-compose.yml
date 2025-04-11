@@ -11,6 +11,7 @@ services:
     command: poetry run python server.py
     volumes:
       - /opt/hoomes/data.db:/app/data.db
+      
     depends_on:
       - redis
 
@@ -36,7 +37,7 @@ services:
     container_name: hoomes_frontend
     image: pinkynrg/hoomes_frontend
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    ports: 
+      - "10002:80"
     depends_on:
       - backend
