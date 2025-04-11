@@ -2,7 +2,7 @@ from datetime import datetime
 from peewee import Model, TextField, CharField, FloatField, IntegerField, SqliteDatabase, DateTimeField
 # PostgresqlDatabase, 
 
-DATABASE_NAME = 'data.db'
+DATABASE_NAME = 'data/data.db'
 
 # Initialize the SQLite database connection
 db = SqliteDatabase(DATABASE_NAME)

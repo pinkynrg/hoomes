@@ -10,7 +10,7 @@ services:
       REDIS_PORT: 6379
     command: poetry run python server.py
     volumes:
-      - /opt/hoomes/data.db:/app/data.db
+      - hoomes-data:/app/data
       
     depends_on:
       - redis
@@ -24,7 +24,7 @@ services:
       REDIS_PORT: 6379
     command: poetry run python worker.py
     volumes:
-      - /opt/hoomes/data.db:/app/data.db
+      - hoomes-data:/app/data
     depends_on:
       - redis
 
@@ -41,3 +41,6 @@ services:
       - "10002:80"
     depends_on:
       - backend
+
+volumes:
+  hoomes-data:
