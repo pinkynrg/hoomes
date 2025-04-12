@@ -1,6 +1,6 @@
 services:
   redis:
-    container_name: redis
+    container_name: hoomes_redis
     image: redis:7.2.2
     restart: always
     ports:

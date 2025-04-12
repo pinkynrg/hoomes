@@ -45,7 +45,7 @@ npm install
 To install pip packages:
 
 ```bash
-cd server && poetry install && cd..
+cd server && poetry install && cd ..
 ```
 
 ### Start the Project
