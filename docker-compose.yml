@@ -6,7 +6,7 @@ services:
     ports:
       - "5001:5001"
     environment:
-      REDIS_HOST: localhost
+      REDIS_HOST: hoomes_redis
       REDIS_PORT: 6379
     command: poetry run python server.py
     volumes:
@@ -20,7 +20,7 @@ services:
     image: pinkynrg/hoomes_backend
     restart: always
     environment:
-      REDIS_HOST: localhost
+      REDIS_HOST: hoomes_redis
       REDIS_PORT: 6379
     command: poetry run python worker.py
     volumes:
