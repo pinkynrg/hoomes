@@ -1,6 +1,6 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "Hoomes \u2014 case in vendita in Italia",
+    "short_name": "Hoomes",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -13,7 +13,9 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
-    "display": "standalone"
+    "theme_color": "#f5efe7",
+    "background_color": "#f5efe7",
+    "display": "standalone",
+    "description": "Cerca case in vendita in Italia leggendo dentro le descrizioni degli annunci.",
+    "start_url": "/"
 }

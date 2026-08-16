@@ -2,64 +2,207 @@
   display: flex;
   flex-direction: column;
   height: inherit;
-  background-color: #fff;
+  background-color: var(--surface);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
 
-  .Filters { 
-    width: 100%;
+  @media screen and (max-width: 1200px) {
+    border: 0;
+  }
+
+  .Filters {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    background: var(--geek-blue-1, #F0F5FF);
     padding: 16px;
-    overflow: hidden;
+    background-color: rgb(255 253 250 / 88%);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
     box-sizing: border-box;
   }
-  
+
+  .Search {
+    height: 44px;
+    border-radius: var(--r-md);
+    background-color: var(--surface-2);
+
+    input {
+      background-color: transparent;
+      font-size: 15px;
+    }
+  }
+
+  .SearchIcon {
+    color: var(--ink-400);
+    margin-right: 6px;
+  }
+
+  .FilterRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .CitySelect {
+    min-width: 168px;
+    flex: none;
+
+    &.Active :global(.ant-select-selector) {
+      border-color: var(--brand-400) !important;
+      background-color: var(--brand-50) !important;
+    }
+  }
+
+  .FilterButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    border-radius: var(--r-pill);
+    color: var(--ink-700);
+    font-size: 14px;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--brand-700) !important;
+      border-color: var(--brand-400) !important;
+    }
+
+    &.Active {
+      border-color: var(--brand-500);
+      background-color: var(--brand-50);
+      color: var(--brand-700);
+      font-weight: 500;
+    }
+  }
+
+  .Caret {
+    font-size: 10px;
+    color: var(--ink-400);
+  }
+
+  .SortLabel {
+    @media screen and (max-width: 520px) {
+      display: none;
+    }
+  }
+
+  .Reset {
+    flex: none;
+    color: var(--ink-400);
+    border-radius: var(--r-pill);
+
+    &:hover {
+      color: var(--danger-500) !important;
+    }
+  }
+
+  .Toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    color: var(--ink-500);
+    font-size: 13.5px;
+  }
+
+  .ResultCounter {
+    strong {
+      color: var(--ink-900);
+      font-weight: 600;
+    }
+  }
+
+  .ToolbarActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .NewRequestLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: var(--brand-600);
+    font-weight: 500;
+
+    &:hover {
+      color: var(--brand-700);
+      text-decoration: underline;
+    }
+  }
+
+  .EmptyDB {
+    color: var(--ink-400);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--danger-500);
+    }
+  }
+
   .ListContainer {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     overflow-y: auto;
     flex: 1;
+    scroll-behavior: smooth;
   }
 
-  .BelowFilter {
-    color: #8C8C8C;
+  .Centered {
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 40px 24px;
     text-align: center;
-    padding: 16px;
-
-    .ResultCounter {
-      margin-right: 4px;
-    }
-
-    .NewRequestLink {
-      text-decoration: none;
-      color: #1890FF;
-      margin-right: 4px;
-      cursor: pointer;
-    }
-    .EmptyDB {
-      text-decoration: none;
-      color: #1890FF;
-      margin-right: 4px;
-      cursor: pointer;
-    }
   }
 
   .NoData {
-    justify-content: center;
+    font-size: 0;
+    opacity: 0.9;
+  }
+
+  .NoDataTitle {
+    margin: 12px 0 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink-800);
+  }
+
+  .NoDataText {
+    margin: 0 0 12px;
+    max-width: 34ch;
+    color: var(--ink-400);
+    font-size: 14px;
   }
 
   .List {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 0 16px;
-    gap: 16px;
+    padding: 16px;
+    gap: 14px;
     box-sizing: border-box;
   }
 
   .Pagination {
-    padding: 16px;
-    margin: auto;   
+    display: flex;
+    justify-content: center;
+    padding: 12px 16px;
+    border-top: 1px solid var(--line-soft);
+    background-color: var(--surface);
   }
 }

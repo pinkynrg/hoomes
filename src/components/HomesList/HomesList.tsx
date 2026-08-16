@@ -1,7 +1,11 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
-import { Button, Dropdown, Input, Pagination, Spin, TreeSelect } from 'antd'
-import Icon, { SearchOutlined } from '@ant-design/icons'
+import { Button, Dropdown, Input, Pagination, Popconfirm, Select, Spin } from 'antd'
+import Icon, {
+  DownOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from '@ant-design/icons'
 import classnames from 'classnames'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -13,11 +17,26 @@ import style from './HomesList.module.scss'
 import { PriceFilterDropdown } from './Dropdowns/PriceFilterDropdown'
 import { SizeFilterDropdown } from './Dropdowns/SizeFilterDropdown'
 import { Sorting } from '../Icons/Sorting'
-import { SortDropdown } from './Dropdowns/SortDropdown'
+import { SortDropdown, SORT_OPTIONS } from './Dropdowns/SortDropdown'
+import { compactEuro } from '../../utils'
 
 interface HomesListProps {
   onPreview: (url: string) => void
   className: string
+}
+
+const rangeLabel = (
+  fallback: string,
+  format: (value: number) => string,
+  min?: string,
+  max?: string,
+) => {
+  const from = min ? format(parseInt(min, 10)) : undefined
+  const to = max ? format(parseInt(max, 10)) : undefined
+  if (from && to) return `${from} – ${to}`
+  if (from) return `da ${from}`
+  if (to) return `fino a ${to}`
+  return fallback
 }
 
 const HomesList = ({
@@ -38,11 +57,12 @@ const HomesList = ({
   const [sortOpened, setSortOpened] = useState<boolean>(false)
 
   const scrollUp = () => {
-    document.getElementById('list')?.scroll({ top: 0 })
+    document.getElementById('list')?.scroll({ top: 0, behavior: 'smooth' })
   }
 
   const onLocationsChange = useDebouncedCallback((cities: string[]) => {
     setLocations(cities)
+    setPageNumber(1)
   })
 
   const onPaginationChange = useDebouncedCallback((newPage: number, newPageSize: number) => {
@@ -55,7 +75,7 @@ const HomesList = ({
     setSearch(e.target.value)
     setPageNumber(1)
     scrollUp()
-  }, 1000)
+  }, 500)
 
   const onPrice = useCallback((data: {minPrice: string, maxPrice: string}) => {
     setMinPrice(data.minPrice)
@@ -79,27 +99,38 @@ const HomesList = ({
     setSortOpened(false)
   }, [])
 
+  const resetFilters = useCallback(() => {
+    setLocations([])
+    setMinPrice(undefined)
+    setMaxPrice(undefined)
+    setMinSize(undefined)
+    setMaxSize(undefined)
+    setPageNumber(1)
+  }, [])
+
   // Calculate the match score as a number between 0 and 1
   const searchWords = search.length > 0 ? search.toLowerCase().split(' ') : []
 
-  const allHomes = useLiveQuery(() => db.homes.toArray()) || []
+  const allHomes = useLiveQuery(() => db.homes.toArray())
 
-  const citiesTree = allHomes
-    .filter((home) => home.province)
-    .map((home) => home.province)
-    .filter((home, index, array) => array.indexOf(home) === index)
-    .map((province) => ({
-      value: `${province}!`,
-      title: province,
-      children: allHomes
+  const cityOptions = useMemo(() => {
+    const homesInDb = allHomes || []
+    const provinces = homesInDb
+      .filter((home) => home.province)
+      .map((home) => home.province)
+      .filter((province, index, array) => array.indexOf(province) === index)
+      .sort((a, b) => a.localeCompare(b))
+
+    return provinces.map((province) => ({
+      label: province,
+      options: homesInDb
         .filter((home) => home.province === province)
         .map((home) => home.city)
         .filter((city, index, array) => array.indexOf(city) === index)
-        .map((city) => ({
-          value: city,
-          title: city,
-        })),
+        .sort((a, b) => a.localeCompare(b))
+        .map((city) => ({ label: city, value: city })),
     }))
+  }, [allHomes])
 
   const homes = useLiveQuery(() => {
     const query = db.homes.toCollection()
@@ -125,7 +156,7 @@ const HomesList = ({
     }
 
     if (locations.length > 0) {
-      // Apply maximum price filter
+      // Apply city filter
       query.and((home) => locations.includes(home.city))
     }
 
@@ -149,7 +180,9 @@ const HomesList = ({
     switch (key) {
       case 'match-desc': return (a: HomeWithMatch, b: HomeWithMatch) => b.match - a.match
       case 'price-asc': return (a: HomeWithMatch, b: HomeWithMatch) => a.price - b.price
+      case 'price-desc': return (a: HomeWithMatch, b: HomeWithMatch) => b.price - a.price
       case 'm2-desc': return (a: HomeWithMatch, b: HomeWithMatch) => b.m2 - a.m2
+      case 'm2-asc': return (a: HomeWithMatch, b: HomeWithMatch) => a.m2 - b.m2
       case 'price_per_meter-asc': return (a: HomeWithMatch, b: HomeWithMatch) => (a.price / a.m2) - (b.price / b.m2)
       default: return (a: HomeWithMatch, b: HomeWithMatch) => b.match - a.match
     }
@@ -188,116 +221,161 @@ const HomesList = ({
     />
   ), [sortBy, onSort])
 
+  const priceActive = !!(minPrice || maxPrice)
+  const sizeActive = !!(minSize || maxSize)
+  const filtersActive = priceActive || sizeActive || locations.length > 0
+  const sortLabel = SORT_OPTIONS.find((option) => option.value === sortBy)?.label ?? 'Ordina'
+
+  const renderList = () => {
+    if (paginatedHomes === undefined) {
+      return (
+        <div className={style.Centered}>
+          <Spin size="large" />
+        </div>
+      )
+    }
+
+    if (paginatedHomes.length === 0) {
+      return (
+        <div className={style.Centered}>
+          <Icon className={style.NoData} component={NoData} />
+          <p className={style.NoDataTitle}>Nessuna casa trovata</p>
+          <p className={style.NoDataText}>
+            Prova con parole diverse o allarga i filtri di prezzo e superficie.
+          </p>
+          { filtersActive && (
+            <Button onClick={resetFilters}>Azzera i filtri</Button>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <div className={style.List}>
+        { paginatedHomes.map((home) => (
+          <HomeElement
+            key={home.uuid}
+            home={home}
+            onPreview={onPreview}
+            showMatch={searchWords.length > 0}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className={classnames(style.Container, className)}>
       <div className={style.Filters}>
         <Input
-          prefix={<SearchOutlined />}
-          placeholder="Cerca"
+          className={style.Search}
+          prefix={<SearchOutlined className={style.SearchIcon} />}
+          placeholder="Cerca nelle descrizioni: giardino, terrazzo, vista…"
+          allowClear
           onChange={onSearch}
         />
-        <TreeSelect
-          allowClear
-          showSearch
-          multiple
-          treeCheckable
-          style={{ minWidth: '130px' }}
-          dropdownStyle={{ width: '250px' }}
-          filterTreeNode={(inputValue, treeNode) => {
-            const toLower = inputValue.toLowerCase()
-            const nodeValue = treeNode.title?.toString() || ''
-            return nodeValue.toLowerCase().includes(toLower)
-          }}
-          maxTagCount={0}
-          autoClearSearchValue={false}
-          showCheckedStrategy="SHOW_CHILD"
-          onChange={onLocationsChange}
-          placeholder="Seleziona cittá"
-          treeData={citiesTree}
-          disabled={citiesTree.length === 0}
-        />
-        <Dropdown
-          placement="bottom"
-          trigger={['click']}
-          open={priceOpened}
-          onOpenChange={setPriceOpened}
-          dropdownRender={getPriceFilterDropdown}
-        >
-          <Button onClick={() => setPriceOpened(!priceOpened)}> € </Button>
-        </Dropdown>
-        <Dropdown
-          placement="bottom"
-          trigger={['click']}
-          open={sizeOpened}
-          onOpenChange={setSizeOpened}
-          dropdownRender={getSizeFilterDropdown}
-        >
-          <Button onClick={() => setSizeOpened(!sizeOpened)}>m&sup2;</Button>
-        </Dropdown>
-        <Dropdown
-          placement="bottom"
-          trigger={['click']}
-          open={sortOpened}
-          onOpenChange={setSortOpened}
-          dropdownRender={getSortDropdown}
-        >
-          <Button>
-            <Icon component={Sorting} />
-          </Button>
-        </Dropdown>
+        <div className={style.FilterRow}>
+          <Select
+            className={classnames(style.CitySelect, {
+              [style.Active]: locations.length > 0,
+            })}
+            mode="multiple"
+            allowClear
+            showSearch
+            maxTagCount={1}
+            options={cityOptions}
+            value={locations}
+            onChange={onLocationsChange}
+            placeholder="Tutte le città"
+            optionFilterProp="label"
+            disabled={cityOptions.length === 0}
+          />
+          <Dropdown
+            placement="bottomLeft"
+            trigger={['click']}
+            open={priceOpened}
+            onOpenChange={setPriceOpened}
+            dropdownRender={getPriceFilterDropdown}
+          >
+            <Button className={classnames(style.FilterButton, { [style.Active]: priceActive })}>
+              {rangeLabel('Prezzo', compactEuro, minPrice, maxPrice)}
+              <DownOutlined className={style.Caret} />
+            </Button>
+          </Dropdown>
+          <Dropdown
+            placement="bottomLeft"
+            trigger={['click']}
+            open={sizeOpened}
+            onOpenChange={setSizeOpened}
+            dropdownRender={getSizeFilterDropdown}
+          >
+            <Button className={classnames(style.FilterButton, { [style.Active]: sizeActive })}>
+              {rangeLabel('Superficie', (value) => `${value} m²`, minSize, maxSize)}
+              <DownOutlined className={style.Caret} />
+            </Button>
+          </Dropdown>
+          <Dropdown
+            placement="bottomRight"
+            trigger={['click']}
+            open={sortOpened}
+            onOpenChange={setSortOpened}
+            dropdownRender={getSortDropdown}
+          >
+            <Button className={style.FilterButton}>
+              <Icon component={Sorting} />
+              <span className={style.SortLabel}>{sortLabel}</span>
+            </Button>
+          </Dropdown>
+          { filtersActive && (
+            <Button type="text" className={style.Reset} onClick={resetFilters}>
+              Azzera
+            </Button>
+          )}
+        </div>
       </div>
-      {
-        sortedHomes
-          && (
-          <div className={style.BelowFilter}>
-            <span className={style.ResultCounter}>
-              {sortedHomes.length}
-              {' '}
-              Risultati |
-            </span>
+
+      { sortedHomes && (
+        <div className={style.Toolbar}>
+          <span className={style.ResultCounter}>
+            <strong>{sortedHomes.length}</strong>
+            { sortedHomes.length === 1 ? ' casa' : ' case' }
+            { searchWords.length > 0 && ' per la tua ricerca' }
+          </span>
+          <span className={style.ToolbarActions}>
             <Link className={style.NewRequestLink} to="/request">
-              Richiedi altre cittá |
+              <PlusOutlined />
+              Altri comuni
             </Link>
-            <span className={style.EmptyDB} onClick={() => db.homes.clear()}>
-              Svuota local DB
-            </span>
-          </div>
-          )
-      }
+            <Popconfirm
+              title="Svuotare i dati locali?"
+              description="Gli annunci salvati nel browser verranno eliminati."
+              okText="Svuota"
+              cancelText="Annulla"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => db.homes.clear()}
+            >
+              <span className={style.EmptyDB}>Svuota dati locali</span>
+            </Popconfirm>
+          </span>
+        </div>
+      )}
+
       <div id="list" className={style.ListContainer}>
-        {
-          // eslint-disable-next-line no-nested-ternary
-          paginatedHomes !== undefined
-            ? paginatedHomes.length === 0
-              ? <Icon className={style.NoData} component={NoData} />
-              : (
-                <div className={style.List}>
-                  { paginatedHomes.map((home) => (
-                    <HomeElement
-                      key={home.uuid}
-                      home={home}
-                      onPreview={onPreview}
-                    />
-                  ))}
-                </div>
-              )
-            : <Spin size="large" />
-        }
+        {renderList()}
       </div>
-      {
-        sortedHomes
-        && (
+
+      { sortedHomes && sortedHomes.length > 0 && (
         <div className={style.Pagination}>
           <Pagination
-            defaultCurrent={pageNumber}
-            defaultPageSize={pageSize}
+            size="small"
             current={pageNumber}
+            pageSize={pageSize}
             total={sortedHomes.length}
+            showSizeChanger={false}
             onChange={onPaginationChange}
           />
         </div>
-        )
-      }
+      )}
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { CheckOutlined } from '@ant-design/icons'
+import classnames from 'classnames'
 import style from './Dropdowns.module.scss'
 
 interface SortDropdownProps {
@@ -5,25 +7,35 @@ interface SortDropdownProps {
   onSubmit: (sortBy: string) => void
 }
 
+const SORT_OPTIONS = [
+  { label: 'Affinità', value: 'match-desc' },
+  { label: 'Prezzo più basso', value: 'price-asc' },
+  { label: 'Prezzo più alto', value: 'price-desc' },
+  { label: 'Più grandi', value: 'm2-desc' },
+  { label: 'Più piccoli', value: 'm2-asc' },
+  { label: 'Miglior €/m²', value: 'price_per_meter-asc' },
+]
+
 const SortDropdown = ({
   sortBy,
   onSubmit,
 }: SortDropdownProps) => (
   <div className={style.SortDropdown}>
-    {
-      [
-        { label: 'Affinitá', value: 'match-desc' },
-        { label: 'Prezzo', value: 'price-asc' },
-        { label: 'Dimensione', value: 'm2-desc' },
-        { label: 'Dimensione', value: 'm2-asc' },
-        { label: 'Prezzo / Metro', value: 'price_per_meter-asc' },
-      ].map((e) => (
-        <div onClick={() => onSubmit(e.value)} className={style.ListElement}>
-          { sortBy === e.value ? <b>{e.label}</b> : <span>{e.label}</span> }
-        </div>
-      ))
-    }
+    <span className={style.DropdownTitle}>Ordina per</span>
+    { SORT_OPTIONS.map((option) => (
+      <button
+        key={option.value}
+        type="button"
+        className={classnames(style.ListElement, {
+          [style.Selected]: sortBy === option.value,
+        })}
+        onClick={() => onSubmit(option.value)}
+      >
+        {option.label}
+        { sortBy === option.value && <CheckOutlined /> }
+      </button>
+    ))}
   </div>
 )
 
-export { SortDropdown }
+export { SortDropdown, SORT_OPTIONS }

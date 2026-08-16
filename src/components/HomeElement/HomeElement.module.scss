@@ -1,126 +1,205 @@
 .Wrapper {
   container-type: inline-size;
+  display: block;
 
   .Container {
-    border: 1px solid var(--neutral-2, #FAFAFA);
-    border-radius: 8px;
-    padding: 16px;
     display: flex;
     flex-direction: row;
-    gap: 24px;
-    
-    .Image {
-      border-radius: 10px;
-      overflow: hidden;
-      min-width: 300px;
-      max-width: 400px;
-      height: 200px;
-  
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-    }
-  
-    .Content {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex: 1 0 0;
-      align-self: stretch;
-      gap: 16px;
-  
-      h1 {
-        color: var(--neutral-13, #000);
-        font-size: 20px;
-        font-weight: 600;
-        line-height: 28px;
-        letter-spacing: 0.2px;
-        margin: 0;
-        margin-bottom: 8px;
-      }
-  
-      .Location {
-        color: var(--neutral-7, #8C8C8C);
-        font-size: 14px;
-        font-weight: 400;
-        line-height: 20px;
-        letter-spacing: 0.14px;
-        margin: 0;
-  
-        svg {
-          margin-right: 4px;
-        }
-      }
-  
-      .Spec {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        gap: 16px;
-  
-        span {
-          color: var(--neutral-7, #8C8C8C);
-          font-size: 16px;
-          font-weight: 400;
-          line-height: 20px;
-          letter-spacing: 0.16px;
-          vertical-align: middle;
-          text-align: center;
-          svg {
-            margin-right: 4px;
-            height: 20px;
-          }
-        }
-      }
-  
-      .Footer {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-  
-        .Match {
-          color: var(--neutral-1, #FFF);
-          border-radius: 100px;
-          text-align: center;
-          font-variant-numeric: lining-nums tabular-nums;
-          font-size: 16px;
-          font-weight: 600;
-          line-height: 20px;
-          display: flex;
-          padding: 8px;
-          justify-content: center;
-          align-items: center;
-          margin-right: auto;
-          
-          &.Good {
-            background: var(--polar-green-6, #52C41A);
-          }
-  
-          &.Decent {
-            background: #e6802d;
-          }
-  
-          &.Bad {
-            background: #F5222D;
-          }
-        }
+    gap: 18px;
+    padding: 12px;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-xs);
+    transition:
+      transform var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--brand-200);
+      box-shadow: var(--shadow-md);
+
+      .Image img {
+        transform: scale(1.04);
       }
     }
   }
 
-  @container (width <= 660px) {
+  .Image {
+    position: relative;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    flex: none;
+    width: 240px;
+    height: 180px;
+    background-color: var(--surface-2);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 400ms var(--ease);
+    }
+  }
+
+  .Source {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    border-radius: var(--r-pill);
+    background-color: rgb(36 27 20 / 62%);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .Match {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    padding: 5px 8px;
+    border-radius: var(--r-sm);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    box-shadow: var(--shadow-sm);
+
+    small {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    &.Good {
+      background-color: var(--accent-600);
+    }
+
+    &.Decent {
+      background-color: var(--gold-600);
+    }
+
+    &.Bad {
+      background-color: var(--danger-500);
+    }
+  }
+
+  .Content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+    padding: 6px 6px 2px 0;
+  }
+
+  .Title {
+    font-family: var(--font-sans);
+    font-size: 16.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--ink-900);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .Location {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 4px 0 0;
+    color: var(--ink-400);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .Price {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-900);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .Spec {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .SpecItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: var(--r-pill);
+    background-color: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    color: var(--ink-700);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+
+    svg {
+      height: 16px;
+      width: 16px;
+      color: var(--ink-400);
+    }
+  }
+
+  .Footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .Favorite {
+    color: var(--ink-400);
+
+    &:hover {
+      color: var(--gold-600);
+    }
+
+    &.IsFavorite {
+      color: var(--gold-500);
+    }
+  }
+
+  .Preview {
+    font-weight: 500;
+  }
+
+  @container (width <= 620px) {
     .Container {
       flex-direction: column;
-      .Content {
-        min-width: auto;
-      }
+    }
+
+    .Image {
+      width: 100%;
+      height: 190px;
+    }
+
+    .Content {
+      padding: 0 6px 4px;
     }
   }
-
 }

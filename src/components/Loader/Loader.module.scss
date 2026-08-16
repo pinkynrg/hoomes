@@ -3,32 +3,136 @@
   justify-content: center;
   align-items: center;
   height: 100%;
+  padding: 24px;
 
   .Panel {
-    margin: auto;
-    flex: 1;
+    width: 100%;
+    max-width: 460px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    gap: 16px;
     text-align: center;
-    max-width: 256px;
-    background: #f7f7f7;
-    border-radius: 16px;
-    padding: 32px;
+    gap: 14px;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 40px 32px 28px;
+    animation: rise-in 420ms var(--ease) both;
 
-    .Divider {
-      margin: 0;
+    @media screen and (max-width: 700px) {
+      padding: 28px 20px 20px;
     }
+  }
 
-    h1 {
-      margin: 0;
-      font-size: 24px;
-    }
+  .Badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--r-pill);
+    background-color: var(--brand-50);
+    color: var(--brand-600);
+    font-size: 22px;
 
-    p {
-      margin: 0;
+    &.BadgeError {
+      background-color: var(--danger-100);
+      color: var(--danger-500);
     }
+  }
+
+  .Pulse {
+    width: 14px;
+    height: 14px;
+    border-radius: var(--r-pill);
+    background-color: var(--brand-500);
+    box-shadow: 0 0 0 0 rgb(194 95 54 / 45%);
+    animation: pulse 1.8s var(--ease) infinite;
+  }
+
+  .Title {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .Text {
+    margin: 0;
+    color: var(--ink-500);
+    font-size: 14.5px;
+    line-height: 1.6;
+    max-width: 38ch;
+  }
+
+  .ProgressBlock {
+    width: 100%;
+    margin-top: 8px;
+    padding: 16px;
+    border-radius: var(--r-lg);
+    background-color: var(--surface-2);
+    border: 1px solid var(--line-soft);
+  }
+
+  .ProgressHead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .Percent {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--ink-900);
+    font-variant-numeric: tabular-nums;
+
+    small {
+      font-size: 16px;
+      color: var(--ink-400);
+      margin-left: 2px;
+    }
+  }
+
+  .ProgressMeta {
+    font-size: 13px;
+    color: var(--ink-500);
+    text-align: right;
+  }
+
+  .Buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(194 95 54 / 45%);
+  }
+
+  70% {
+    box-shadow: 0 0 0 16px rgb(194 95 54 / 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(194 95 54 / 0%);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

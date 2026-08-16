@@ -1,49 +1,90 @@
 .Layout {
   display: flex;
   flex-direction: column;
-  background-image: url('~/public/background-1.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  min-height: 100dvh;
+  background-color: var(--canvas);
+  background-image:
+    radial-gradient(900px 420px at 12% -8%, rgb(194 95 54 / 14%), transparent 60%),
+    radial-gradient(760px 420px at 92% 4%, rgb(125 140 78 / 14%), transparent 62%),
+    linear-gradient(180deg, #fffdfa 0%, var(--canvas) 100%);
   background-attachment: fixed;
+
   .Header {
     display: flex;
-    height: 60px;
-    justify-content: center;
-    background-color: rgba(255, 255, 255, 0.7);
-    .Left {
-      flex: 1;
-      display: flex;
-      .Expander {
-        cursor: pointer;
-        display: none;
-        align-items: center;
-        gap: 8px;
-        margin: 0 16px;
-        @media screen and (max-width: 1200px) {
-          display: flex;
-        }
-      }
-    }
-    .Center {
-      flex: 1;
-      h1 {
-        font-size: 24px;
-        margin: 0;
-        line-height: 60px;
-        font-weight: 700;
-        text-align: center;
-        span {
-          color: #1890FF;
-        }
-      }
-    }
+    align-items: center;
+    height: var(--header-h);
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: rgb(255 253 250 / 78%);
+    backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid rgb(232 222 210 / 80%);
+
+    .Left,
     .Right {
       flex: 1;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .Right {
+      justify-content: flex-end;
+    }
+
+    .Back {
+      color: var(--ink-700);
+      font-weight: 500;
+    }
+
+    .Tagline {
+      color: var(--ink-400);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      @media screen and (max-width: 900px) {
+        display: none;
+      }
+    }
+
+    .Center {
+      display: flex;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .Brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .Mark {
+      display: inline-flex;
+      color: var(--brand-600);
+      line-height: 0;
+      filter: drop-shadow(0 4px 10px rgb(173 78 40 / 28%));
+    }
+
+    .Wordmark {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink-900);
+      line-height: 1;
+    }
+
+    .Dot {
+      color: var(--brand-500);
     }
   }
+
   .Body {
-    height: calc(100dvh - 60px);
+    height: calc(100dvh - var(--header-h));
     position: relative;
   }
 }

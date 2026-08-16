@@ -1,13 +1,170 @@
+/* ==========================================================================
+   Hoomes — design tokens & global styles
+   ========================================================================== */
+
+:root {
+  /* Brand — terracotta */
+  --brand-50: #fdf4ef;
+  --brand-100: #f8e2d5;
+  --brand-200: #eec3a9;
+  --brand-400: #d2825b;
+  --brand-500: #c25f36;
+  --brand-600: #ad4e28;
+  --brand-700: #8c3d1f;
+  --brand-900: #4b1f10;
+
+  /* Accent — sage, the cool counterweight */
+  --accent-50: #f3f5ec;
+  --accent-100: #e3e9d4;
+  --accent-500: #7d8c4e;
+  --accent-600: #63713a;
+  --accent-700: #4c5729;
+
+  /* Gold — warnings, middling matches */
+  --gold-100: #fbf0d9;
+  --gold-500: #d99e32;
+  --gold-600: #a3701a;
+
+  /* Feedback */
+  --danger-100: #fbeae9;
+  --danger-500: #c02a2a;
+  --danger-600: #9d1f1f;
+
+  /* Neutrals — warm stone */
+  --ink-900: #241b14;
+  --ink-800: #372b21;
+  --ink-700: #4f4034;
+  --ink-500: #7a6a5c;
+  --ink-400: #95867a;
+  --ink-300: #c6bbaf;
+  --line: #e8ded2;
+  --line-soft: #f2ebe2;
+  --surface: #fff;
+  --surface-2: #faf6f1;
+  --canvas: #f5efe7;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgb(60 40 25 / 6%);
+  --shadow-sm: 0 2px 10px -3px rgb(60 40 25 / 12%);
+  --shadow-md: 0 10px 30px -12px rgb(60 40 25 / 20%);
+  --shadow-lg: 0 30px 70px -30px rgb(75 31 16 / 35%);
+  --ring: 0 0 0 3px rgb(194 95 54 / 18%);
+
+  /* Radii */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+
+  /* Type */
+  --font-display: 'Fraunces', 'Iowan Old Style', georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, blinkmacsystemfont, 'Segoe UI', roboto,
+    'Helvetica Neue', arial, sans-serif;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dur: 180ms;
+
+  /* Chrome */
+  --header-h: 64px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-800);
+  background-color: var(--canvas);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizelegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  color: var(--ink-900);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, menlo, monaco, consolas, 'Courier New', monospace;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+/* Scrollbars — quiet, on-brand */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-300) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--ink-300);
+  border: 3px solid transparent;
+  border-radius: var(--r-pill);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink-400);
+  background-clip: content-box;
+}
+
+/* --------------------------------------------------------------------------
+   Ant Design refinements
+   -------------------------------------------------------------------------- */
+
+.ant-btn {
+  font-weight: 500;
+  box-shadow: none !important;
+}
+
+.ant-btn-primary {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.ant-select-dropdown,
+.ant-dropdown-menu {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

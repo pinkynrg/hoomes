@@ -12,42 +12,59 @@ const PriceFilterDropdown = ({
   minPrice,
   maxPrice,
   onSubmit,
-}: PriceFilterDropdownProps) => (
-  <Form
-    layout="horizontal"
-    onFinish={onSubmit}
-    className={style.Dropdown}
-    initialValues={{
-      minPrice,
-      maxPrice,
-    }}
-  >
-    <Form.Item name="minPrice">
-      <InputNumber
-        className={style.InputNumber}
-        addonAfter="€"
-        style={{ width: '100%' }}
-        controls={false}
-        placeholder="Min. Price"
-        formatter={(value) => (value ? NumberFormatter.format(value) : '')}
-        parser={(value?: string) => (value ? stringToNumber(value) : '')}
-      />
-    </Form.Item>
-    <Form.Item name="maxPrice">
-      <InputNumber
-        className={style.InputNumber}
-        addonAfter="€"
-        style={{ width: '100%' }}
-        controls={false}
-        placeholder="Max. Price"
-        formatter={(value) => (value ? NumberFormatter.format(value) : '')}
-        parser={(value?: string) => (value ? stringToNumber(value) : '')}
-      />
-    </Form.Item>
-    <Button htmlType="submit">
-      Vedi Annunci
-    </Button>
-  </Form>
-)
+}: PriceFilterDropdownProps) => {
+  const [form] = Form.useForm()
+
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={onSubmit}
+      className={style.Dropdown}
+      initialValues={{
+        minPrice,
+        maxPrice,
+      }}
+    >
+      <span className={style.DropdownTitle}>Prezzo</span>
+      <div className={style.Range}>
+        <Form.Item name="minPrice" noStyle>
+          <InputNumber
+            addonAfter="€"
+            controls={false}
+            placeholder="Min"
+            formatter={(value) => (value ? NumberFormatter.format(value) : '')}
+            parser={(value?: string) => (value ? stringToNumber(value) : '')}
+          />
+        </Form.Item>
+        <span className={style.RangeDash}>–</span>
+        <Form.Item name="maxPrice" noStyle>
+          <InputNumber
+            addonAfter="€"
+            controls={false}
+            placeholder="Max"
+            formatter={(value) => (value ? NumberFormatter.format(value) : '')}
+            parser={(value?: string) => (value ? stringToNumber(value) : '')}
+          />
+        </Form.Item>
+      </div>
+      <div className={style.DropdownActions}>
+        <Button
+          type="text"
+          onClick={() => {
+            form.resetFields()
+            form.setFieldsValue({ minPrice: undefined, maxPrice: undefined })
+            onSubmit({ minPrice: '', maxPrice: '' })
+          }}
+        >
+          Azzera
+        </Button>
+        <Button type="primary" htmlType="submit">
+          Applica
+        </Button>
+      </div>
+    </Form>
+  )
+}
 
 export { PriceFilterDropdown }

@@ -12,42 +12,59 @@ const SizeFilterDropdown = ({
   minSize,
   maxSize,
   onSubmit,
-}: SizeFilterDropdownProps) => (
-  <Form
-    layout="horizontal"
-    onFinish={onSubmit}
-    className={style.Dropdown}
-    initialValues={{
-      minSize,
-      maxSize,
-    }}
-  >
-    <Form.Item name="minSize">
-      <InputNumber
-        className={style.InputNumber}
-        addonAfter="m&sup2;"
-        style={{ width: '100%' }}
-        controls={false}
-        placeholder="Min. Size"
-        formatter={(value) => (value ? NumberFormatter.format(value) : '')}
-        parser={(value?: string) => (value ? stringToNumber(value) : '')}
-      />
-    </Form.Item>
-    <Form.Item name="maxSize">
-      <InputNumber
-        className={style.InputNumber}
-        addonAfter="m&sup2;"
-        style={{ width: '100%' }}
-        controls={false}
-        placeholder="Max. Size"
-        formatter={(value) => (value ? NumberFormatter.format(value) : '')}
-        parser={(value?: string) => (value ? stringToNumber(value) : '')}
-      />
-    </Form.Item>
-    <Button htmlType="submit">
-      Vedi Annunci
-    </Button>
-  </Form>
-)
+}: SizeFilterDropdownProps) => {
+  const [form] = Form.useForm()
+
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={onSubmit}
+      className={style.Dropdown}
+      initialValues={{
+        minSize,
+        maxSize,
+      }}
+    >
+      <span className={style.DropdownTitle}>Superficie</span>
+      <div className={style.Range}>
+        <Form.Item name="minSize" noStyle>
+          <InputNumber
+            addonAfter="m²"
+            controls={false}
+            placeholder="Min"
+            formatter={(value) => (value ? NumberFormatter.format(value) : '')}
+            parser={(value?: string) => (value ? stringToNumber(value) : '')}
+          />
+        </Form.Item>
+        <span className={style.RangeDash}>–</span>
+        <Form.Item name="maxSize" noStyle>
+          <InputNumber
+            addonAfter="m²"
+            controls={false}
+            placeholder="Max"
+            formatter={(value) => (value ? NumberFormatter.format(value) : '')}
+            parser={(value?: string) => (value ? stringToNumber(value) : '')}
+          />
+        </Form.Item>
+      </div>
+      <div className={style.DropdownActions}>
+        <Button
+          type="text"
+          onClick={() => {
+            form.resetFields()
+            form.setFieldsValue({ minSize: undefined, maxSize: undefined })
+            onSubmit({ minSize: '', maxSize: '' })
+          }}
+        >
+          Azzera
+        </Button>
+        <Button type="primary" htmlType="submit">
+          Applica
+        </Button>
+      </div>
+    </Form>
+  )
+}
 
 export { SizeFilterDropdown }

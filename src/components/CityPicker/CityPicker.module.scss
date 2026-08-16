@@ -1,0 +1,326 @@
+.CityPicker {
+  position: relative;
+  width: 100%;
+  text-align: left;
+
+  .FieldWrap {
+    position: relative;
+  }
+
+  .Field {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 8px 10px 8px 14px;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    cursor: text;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+
+    &:hover {
+      border-color: var(--brand-200);
+    }
+
+    &:focus-within {
+      border-color: var(--brand-500);
+      box-shadow: var(--ring);
+    }
+
+    &.Disabled {
+      background-color: var(--surface-2);
+      cursor: progress;
+    }
+  }
+
+  .SearchIcon {
+    color: var(--ink-400);
+    font-size: 16px;
+    margin-top: 10px;
+  }
+
+  .Tokens {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .Input {
+    flex: 1;
+    min-width: 160px;
+    height: 34px;
+    border: 0;
+    outline: 0;
+    padding: 0;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink-900);
+    background: transparent;
+
+    &::placeholder {
+      color: var(--ink-400);
+    }
+  }
+
+  .Chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 4px 0 10px;
+    background-color: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    border-radius: var(--r-pill);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--brand-700);
+    animation: chip-in 160ms var(--ease);
+  }
+
+  .ChipName {
+    white-space: nowrap;
+  }
+
+  .ChipMeta {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--brand-400);
+  }
+
+  .ChipRemove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 0;
+    padding: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--brand-400);
+    cursor: pointer;
+    font-size: 10px;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+
+    &:hover {
+      background-color: var(--brand-100);
+      color: var(--brand-700);
+    }
+  }
+
+  .ClearAll {
+    flex: none;
+    margin-top: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--ink-400);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--r-xs);
+
+    &:hover {
+      color: var(--danger-500);
+      background-color: var(--danger-100);
+    }
+  }
+
+  .Dropdown {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: dropdown-in 140ms var(--ease);
+  }
+
+  .Results {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .Result {
+    display: grid;
+    grid-template-columns: 20px minmax(0, auto) 1fr auto;
+    align-items: baseline;
+    gap: 4px 8px;
+    padding: 9px 10px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+
+    mark {
+      background: transparent;
+      color: var(--brand-600);
+      font-weight: 700;
+      padding: 0;
+    }
+
+    &.Active {
+      background-color: var(--brand-50);
+    }
+
+    &.ProvinceResult {
+      .ResultName {
+        font-weight: 500;
+      }
+
+      .ResultIcon {
+        color: var(--accent-600);
+      }
+    }
+  }
+
+  .ResultIcon {
+    color: var(--ink-300);
+    font-size: 14px;
+    align-self: center;
+  }
+
+  .ResultName {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ResultMeta {
+    font-size: 12.5px;
+    color: var(--ink-400);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ResultSide {
+    font-size: 12px;
+    color: var(--ink-400);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .NoResults {
+    padding: 20px 16px;
+    color: var(--ink-500);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .DropdownHint {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--line-soft);
+    background-color: var(--surface-2);
+    color: var(--ink-400);
+    font-size: 12px;
+
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      margin-right: 2px;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      background-color: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--ink-500);
+    }
+
+    @media screen and (max-width: 700px) {
+      display: none;
+    }
+  }
+
+  .Notice {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: var(--r-sm);
+    background-color: var(--gold-100);
+    color: var(--gold-600);
+    font-size: 13px;
+  }
+
+  .QuickPicks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .QuickPicksLabel {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+    margin-right: 2px;
+  }
+
+  .QuickPick {
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background-color: var(--surface);
+    color: var(--ink-700);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+
+    &:hover {
+      border-color: var(--brand-400);
+      color: var(--brand-700);
+      background-color: var(--brand-50);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+@keyframes chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

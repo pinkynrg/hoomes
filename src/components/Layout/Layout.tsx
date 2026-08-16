@@ -1,35 +1,48 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useSessionStorage } from 'usehooks-ts'
-import Icon from '@ant-design/icons'
+import { ArrowLeftOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
 import style from './Layout.module.scss'
-import { Expander } from '../Icons/Expander'
+import { Logo } from '../Icons/Logo'
 
 const Layout = () => {
   const [url, setUrl] = useSessionStorage<string | null>('url', null)
+  const { pathname } = useLocation()
+  const isListing = pathname.startsWith('/listing') && pathname === '/listing'
+
   return (
     <div className={style.Layout}>
-      <div className={style.Header}>
+      <header className={style.Header}>
         <div className={style.Left}>
-          { url
-            ? (
-              <span className={style.Expander} onClick={() => setUrl(null)}>
-                <Icon component={Expander} />
-                <span> Back </span>
-              </span>
-            )
-            : null}
+          { url && (
+            <Button
+              className={style.Back}
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => setUrl(null)}
+            >
+              Indietro
+            </Button>
+          )}
         </div>
         <div className={style.Center}>
-          <h1>
-            Hoomes
-            <span>.</span>
-          </h1>
+          <span className={style.Brand}>
+            <span className={style.Mark}><Logo /></span>
+            <span className={style.Wordmark}>
+              Hoomes
+              <span className={style.Dot}>.</span>
+            </span>
+          </span>
         </div>
-        <div className={style.Right} />
-      </div>
-      <div className={style.Body}>
+        <div className={style.Right}>
+          { isListing && (
+            <span className={style.Tagline}>Case in Italia, cercate a parole tue</span>
+          )}
+        </div>
+      </header>
+      <main className={style.Body}>
         <Outlet />
-      </div>
+      </main>
     </div>
   )
 }
