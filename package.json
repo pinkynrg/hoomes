@@ -22,6 +22,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "http-proxy-middleware": "^2.0.6",
+    "playwright": "^1.62.1",
     "stylelint": "^15.10.3",
     "stylelint-config-standard": "^34.0.0",
     "stylelint-config-standard-scss": "^11.0.0",
@@ -56,6 +57,8 @@
   "scripts": {
     "start": "concurrently --names 'frontend, backend, workers,   redis' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold,bgYellow.bold' \"npm run start-frontend\" \"npm run start-backend\"  \"npm run start-workers\"   \"docker compose -f docker-compose.development.yml up\"",
     "build": "react-scripts build",
+    "demo": "node demo/record.mjs",
+    "readme": "npx --yes @appnest/readme generate",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start-frontend": "react-scripts start",

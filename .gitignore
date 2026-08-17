@@ -25,3 +25,5 @@ yarn-error.log*
 
 hoomes_deploy
 hoomes_deploy.pub
+# demo recording scratch
+demo/.recording

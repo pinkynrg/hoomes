@@ -5,7 +5,9 @@
 
 Welcome to **Hoomes**, a tool for scraping and searching homes for sale in Italy. Hoomes helps users find properties by gathering data from leading real estate platforms like [Idealista](https://www.idealista.it/) and [Caaasa.it](https://www.caasa.it/). What sets Hoomes apart is its ability to search within property comments, giving you deeper insights into listings. Whether you're browsing or searching for something specific, Hoomes provides the information you need to make informed decisions.
 
-![demo](https://github.com/pinkynrg/Hoomes/blob/main/demo.gif)
+<p align="center">
+  <img src="docs/media/hoomes-demo.gif" alt="Hoomes: pick a few comuni, wait for the scrape to finish, then search the descriptions and open a listing in the preview pane" width="720">
+</p>
 
 
 [![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#-what-hoomes-does)
@@ -21,7 +23,7 @@ When you make a request, Hoomes scrapes the data on-demand, so it may take a bit
 
 ## ➤ 🚀 Getting Started
 
-### Requirments
+### Requirements
 
 Make sure to install all the necessary dependencies:
 
@@ -32,7 +34,7 @@ Make sure to install all the necessary dependencies:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/hoomes.git
+git clone https://github.com/pinkynrg/hoomes.git
 cd hoomes
 ```
 
@@ -54,6 +56,43 @@ To start the project, use the following command:
 
 ```bash
 npm start
+```
+
+
+[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#-the-demo-above)
+
+## ➤ 🎬 The demo above
+
+The gif at the top is generated, not recorded by hand:
+
+```bash
+npm run build
+npm run demo
+```
+
+`demo/record.mjs` serves the production build, drives it with Playwright and
+encodes the result into `docs/media/`: the gif above, plus an `.mp4` and a
+poster frame for embedding it anywhere a 1.8&nbsp;MB gif would be rude. It
+never touches Idealista or Caasa.it:
+every `/v1` call is answered from `demo/fixtures`, so the recording is the same
+every time, runs offline, and does not depend on two other people's markup
+staying still. The listings and the photos in it are invented.
+
+Requires `ffmpeg` and `gifsicle` on the path, plus a browser for Playwright
+(`npx playwright install chromium`).
+
+Change the tape and re-run it whenever the interface moves: a screenshot of an
+interface that no longer exists is worse than no screenshot.
+
+
+[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#-editing-this-readme)
+
+## ➤ 📝 Editing this README
+
+`README.md` is generated. Edit `blueprint.md` and run:
+
+```bash
+npm run readme
 ```
 
 
