@@ -1,6 +1,6 @@
 import { Home } from './dbConfig'
 
-type JobStatusTypes = 'queued' | 'started' | 'deferred' | 'finished' | 'stopped' | 'scheduled' | 'canceled' | 'failed'
+type JobStatusTypes = 'queued' | 'started' | 'deferred' | 'finished' | 'stopped' | 'scheduled' | 'canceled' | 'failed' | 'invalid'
 
 interface RequestResponseSuccess {
   jobs_id: string[]
@@ -24,6 +24,8 @@ interface JobsResponse {
   jobs: JobResponse[]
   result: Home[]
   finished: boolean
+  /* Comuni whose job failed or vanished from the queue. */
+  failed?: number
 }
 
 interface Location {

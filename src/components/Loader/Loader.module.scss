@@ -40,6 +40,11 @@
       background-color: var(--danger-100);
       color: var(--danger-500);
     }
+
+    &.BadgeWarning {
+      background-color: var(--gold-100);
+      color: var(--gold-600);
+    }
   }
 
   .Pulse {
@@ -100,6 +105,16 @@
     font-size: 13px;
     color: var(--ink-500);
     text-align: right;
+  }
+
+  .Warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    color: var(--gold-600);
+    font-size: 13px;
   }
 
   .Buttons {

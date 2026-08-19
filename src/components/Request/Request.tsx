@@ -29,8 +29,8 @@ const FEATURES = [
   },
   {
     icon: <CloudDownloadOutlined />,
-    title: 'Due portali, una lista',
-    text: 'Gli annunci di Idealista e Caasa.it arrivano insieme, senza doppioni da confrontare a mano.',
+    title: 'Una provincia alla volta',
+    text: 'Aggiungi tutti i comuni di una provincia in un colpo solo, invece di cercarli uno per uno.',
   },
   {
     icon: <ThunderboltOutlined />,
@@ -85,7 +85,7 @@ const Request = ({
     <div className={classnames(style.Container, className)}>
       <div className={style.Content}>
         <header className={style.Hero}>
-          <span className={style.Eyebrow}>Idealista + Caasa.it</span>
+          <span className={style.Eyebrow}>Annunci da Caasa.it</span>
           <h1 className={style.Title}>
             Trova casa in Italia
             <br />
@@ -132,8 +132,8 @@ const Request = ({
               { !submitting && <ArrowRightOutlined /> }
             </Button>
             <span className={style.Hint}>
-              Il download richiede qualche minuto: puoi chiudere la pagina
-              e tornare più tardi, la ricerca continua.
+              Qualche minuto per pochi comuni, di più per una provincia intera:
+              puoi chiudere la pagina, la ricerca continua.
             </span>
           </div>
         </section>

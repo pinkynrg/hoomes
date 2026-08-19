@@ -4,8 +4,13 @@ from peewee import Model, TextField, CharField, FloatField, IntegerField, Sqlite
 
 DATABASE_NAME = 'data/data.db'
 
-# Initialize the SQLite database connection
-db = SqliteDatabase(DATABASE_NAME)
+# WAL + a busy timeout: the API process and the worker share this file, and the
+# default settings turn any overlap into a swallowed "database is locked".
+db = SqliteDatabase(DATABASE_NAME, pragmas={
+    'journal_mode': 'wal',
+    'busy_timeout': 10000,
+    'synchronous': 1,
+})
 
 
 # Specify the PostgreSQL connection details
@@ -89,22 +94,23 @@ db.connect()
 db.create_tables([Location,House], safe=True)
 
 def upsert_record(model_class, unique_field, **kwargs):
-    try:
-        # Try to find a record with the given unique field value
-        existing_record = model_class.get_or_none(**{unique_field: kwargs.get(unique_field)})
+    """Insert or update a single record.
 
-        if existing_record:
-            # If the record exists, update its attributes
-            for field, value in kwargs.items():
-                if field != unique_field:
-                    setattr(existing_record, field, value)
+    Write errors are raised, not printed: a swallowed failure here used to look
+    like a successful scrape that simply found nothing.
+    """
+    # Try to find a record with the given unique field value
+    existing_record = model_class.get_or_none(**{unique_field: kwargs.get(unique_field)})
 
+    if existing_record:
+        # If the record exists, update its attributes
+        for field, value in kwargs.items():
+            if field != unique_field:
+                setattr(existing_record, field, value)
+
+        if hasattr(existing_record, 'updated_at'):
             existing_record.updated_at = datetime.now()  # Update the 'updated_at' field
-            existing_record.save()
-        else:
-            # If the record doesn't exist, create a new one
-            model_class.create(**kwargs)
-    except Exception as e:
-        print("Error:", e)
-    finally:
-        db.close()  # Close the database connection
+        existing_record.save()
+    else:
+        # If the record doesn't exist, create a new one
+        model_class.create(**kwargs)

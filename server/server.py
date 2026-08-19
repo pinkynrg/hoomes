@@ -19,7 +19,16 @@ q = Queue(connection=conn, default_timeout=3600)
 
 MAX_JOBS = 312
 
-ComuniItalia.fetch()
+# Statuses a job never recovers from. 'invalid' means the job is gone from
+# Redis, which we count as a failure instead of quietly dropping its results.
+FAILED_STATUSES = ['failed', 'invalid', 'stopped', 'canceled']
+
+try:
+    ComuniItalia.fetch()
+except Exception as error:
+    # The comuni list is already in the database from previous boots, so a bad
+    # refresh must not crash-loop the API container.
+    print('Could not refresh the comuni list: {}'.format(error))
 
 @app.route('/v1/locations', methods=['GET'])
 def get_all_locations():
@@ -131,7 +140,8 @@ def check_job_status(jobs_id_str):
                 'status': job.get_status(),
             }]
 
-    finished = all([job_status['status'] in ['invalid', 'failed', 'finished'] for job_status in jobs_status])
+    finished = all([job_status['status'] in ['finished'] + FAILED_STATUSES for job_status in jobs_status])
+    failed = len([job_status for job_status in jobs_status if job_status['status'] in FAILED_STATUSES])
     
     result = []
     if finished:
@@ -145,6 +155,7 @@ def check_job_status(jobs_id_str):
         "jobs": jobs_status, 
         "result": result,
         "finished": finished,
+        "failed": failed,
     }), 200
 
 if __name__ == '__main__':

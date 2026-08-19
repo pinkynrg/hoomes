@@ -1,11 +1,18 @@
-from utils import get
+from utils import get, HttpError, ScrapeError
 from bs4 import BeautifulSoup
-from db import upsert_record, Location
+from db import db, upsert_record, Location
 import concurrent.futures
 from functools import partial
 from unidecode import unidecode
 import json
+import os
 import re
+import time
+
+# One comune used to open 30 connections at once. Fine on its own, but a whole
+# province queues 40+ of those bursts back to back and the sites start refusing.
+MAX_WORKERS = int(os.environ.get('SCRAPER_MAX_WORKERS', '4'))
+PAGE_DELAY_SECONDS = float(os.environ.get('SCRAPER_PAGE_DELAY_SECONDS', '1'))
 
 class ComuniItalia: 
   HOST = "raw.githubusercontent.com"
@@ -14,23 +21,24 @@ class ComuniItalia:
     html_text = get(ComuniItalia.HOST, "matteocontrini/comuni-json/master/comuni.json")
     json_string = unidecode(html_text)
     data = json.loads(json_string)
-    for comune in data:
-      upsert_record(
-          Location,
-          'codice',
-          nome=comune.get('nome', ''),
-          codice=comune.get('codice', ''),
-          zona_codice=comune['zona']['codice'] if 'zona' in comune else None,
-          zona_nome=comune['zona']['nome'] if 'zona' in comune else None,
-          regione_codice=comune['regione']['codice'] if 'regione' in comune else None,
-          regione_nome=comune['regione']['nome'] if 'regione' in comune else None,
-          provincia_codice=comune['provincia']['codice'] if 'provincia' in comune else None,
-          provincia_nome=comune['provincia']['nome'] if 'provincia' in comune else None,
-          sigla=comune.get('sigla', ''),
-          codiceCatastale=comune.get('codiceCatastale', ''),
-          cap=comune['cap'] if 'cap' in comune else None,
-          popolazione=comune.get('popolazione', 0)
-      )      
+    with db.atomic():
+      for comune in data:
+        upsert_record(
+            Location,
+            'codice',
+            nome=comune.get('nome', ''),
+            codice=comune.get('codice', ''),
+            zona_codice=comune['zona']['codice'] if 'zona' in comune else None,
+            zona_nome=comune['zona']['nome'] if 'zona' in comune else None,
+            regione_codice=comune['regione']['codice'] if 'regione' in comune else None,
+            regione_nome=comune['regione']['nome'] if 'regione' in comune else None,
+            provincia_codice=comune['provincia']['codice'] if 'provincia' in comune else None,
+            provincia_nome=comune['provincia']['nome'] if 'provincia' in comune else None,
+            sigla=comune.get('sigla', ''),
+            codiceCatastale=comune.get('codiceCatastale', ''),
+            cap=comune['cap'] if 'cap' in comune else None,
+            popolazione=comune.get('popolazione', 0)
+        )
 
 class Idealista: 
 
@@ -85,6 +93,10 @@ class Idealista:
         "comment": comment, 
       }
 
+    except HttpError:
+      # The site is refusing us. Failing here is deliberate: dropping the listing
+      # would make the pruning step below delete a house that still exists.
+      raise
     except Exception as e:
       print("ERROR fetching data @ {}: {}".format(page_link, e))
 
@@ -200,13 +212,14 @@ class Idealista:
           comune,
         )
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
           for result in executor.map(get_house_data_with_meta, links):
             if result is not None:
               collection += [result]
         next_page = Idealista.get_next_page(html_tree)
         if not next_page: 
           break
+        time.sleep(PAGE_DELAY_SECONDS)
 
     return collection
   
@@ -216,17 +229,17 @@ class Caasa:
   HOST = "www.caasa.it"
   ELEMENT_TYPES = [
     'appartamento',
-    # 'attico',
-    # 'baita',
-    # 'bifamiliare',
-    # 'campidanese',
-    # 'caposchiera',
-    # 'casa-indipendente',
-    # 'casa-semindipendente',
-    # 'casale',
-    # 'villa',
-    # 'villetta',
-    # 'schiera',
+    'attico',
+    'baita',
+    'bifamiliare',
+    'campidanese',
+    'caposchiera',
+    'casa-indipendente',
+    'casa-semindipendente',
+    'casale',
+    'villa',
+    'villetta',
+    'schiera',
   ]
 
   def get_house_data(comune, page_link):
@@ -277,15 +290,17 @@ class Caasa:
         "comment": comment, 
       }
 
+    except HttpError:
+      # The site is refusing us. Failing here is deliberate: dropping the listing
+      # would make the pruning step below delete a house that still exists.
+      raise
     except Exception as e:
       print("ERROR fetching data @ {}: {}".format(page_link, e))
 
   def format_name(name):
     return name.replace(' ', '-').replace('\'', '-').lower()
   
-  def get_total_houses(page_link):
-      html_text = get(Caasa.HOST, page_link)
-      soup = BeautifulSoup(html_text, "html.parser")
+  def get_total_houses(soup):
       article = soup.find('article', attrs={"class": "real-estate-article"})
       if article: 
         matches = re.search(r'(\d+)\s+offerte', article.text)
@@ -293,6 +308,18 @@ class Caasa:
             total_houses = int(matches.group(1))
             return total_houses
       return None
+
+  def is_listing_page(soup):
+    """True when the response really is a search-results page.
+
+    Without this an error page, a captcha or a redirect landing page parses to
+    zero results and is indistinguishable from a comune with nothing for sale.
+    """
+    return bool(
+      soup.find("div", attrs={"class": "result-item"})
+      or soup.find("article", attrs={"class": "real-estate-article"})
+      or soup.find("div", attrs={"class": "pagination-next"})
+    )
   
   def get_filters_part(
       min_price = None, 
@@ -356,9 +383,15 @@ class Caasa:
       return fav_container['data-canonical']
     
     collection = []
-    next_page = 1
-    page_link = get_final_url(next_page)
-    total_houses = Caasa.get_total_houses(page_link)
+    page_link = get_final_url(1)
+    first_tree = BeautifulSoup(get(Caasa.HOST, page_link), "html.parser")
+
+    if not Caasa.is_listing_page(first_tree):
+      raise ScrapeError('{} did not return a listing page for {} ({})'.format(
+        Caasa.HOST, location.nome, page_link,
+      ))
+
+    total_houses = Caasa.get_total_houses(first_tree)
 
     # max pages offered by Idealista is 165 x 22 (18 black + 4 red premium)
     if (total_houses and total_houses > 165 * 22):
@@ -402,10 +435,8 @@ class Caasa:
         else:
           pass
     else:
+      html_tree = first_tree
       while True: 
-        page_link = get_final_url(next_page)
-        html_text = get(Caasa.HOST, page_link)
-        html_tree = BeautifulSoup(html_text, "html.parser")
         items_list = html_tree.find_all("div", attrs={"class": "result-item"})
         links = [get_house_link(item) for item in items_list]
 
@@ -415,12 +446,14 @@ class Caasa:
           location.get_nome_for('caasa.it'),
         )
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
           for result in executor.map(get_house_data_with_meta, links):
             if result is not None:
               collection += [result]
         next_page = Caasa.get_next_page(html_tree)
         if not next_page: 
           break
+        time.sleep(PAGE_DELAY_SECONDS)
+        html_tree = BeautifulSoup(get(Caasa.HOST, get_final_url(next_page)), "html.parser")
 
     return collection

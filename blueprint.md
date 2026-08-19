@@ -1,6 +1,6 @@
 # 🏡 Hoomes: Your Gateway to Italian Real Estate 🏡
 
-Welcome to **Hoomes**, a tool for scraping and searching homes for sale in Italy. Hoomes helps users find properties by gathering data from leading real estate platforms like [Idealista](https://www.idealista.it/) and [Caaasa.it](https://www.caasa.it/). What sets Hoomes apart is its ability to search within property comments, giving you deeper insights into listings. Whether you're browsing or searching for something specific, Hoomes provides the information you need to make informed decisions.
+Welcome to **Hoomes**, a tool for scraping and searching homes for sale in Italy. Hoomes gathers listings from [Caasa.it](https://www.caasa.it/) and makes them searchable by the words inside each description, giving you deeper insights than the standard filters. Whether you're browsing or searching for something specific, Hoomes provides the information you need to make informed decisions.
 
 <p align="center">
   <img src="docs/media/hoomes-demo.gif" alt="Hoomes: pick a few comuni, wait for the scrape to finish, then search the descriptions and open a listing in the preview pane" width="720">
@@ -8,7 +8,11 @@ Welcome to **Hoomes**, a tool for scraping and searching homes for sale in Italy
 
 ## 🌟 What Hoomes Does
 
-Hoomes pulls listings from popular Italian real estate platforms and allows you to perform powerful full-text searches across the descriptions of each scraped property. Imagine being able to search for keywords like "panoramic view," "garden," or "historical center" across thousands of listings in seconds!
+Hoomes pulls listings from Caasa.it and allows you to perform powerful full-text searches across the descriptions of each scraped property. Imagine being able to search for keywords like "panoramic view," "garden," or "historical center" across thousands of listings in seconds!
+
+You pick the comuni to cover — one at a time, or a whole province in a single click — and one scraping job runs per comune.
+
+> **Note on sources:** an [Idealista](https://www.idealista.it/) scraper lives in `server/services/scraper.py` and is kept for reference, but it is not wired into the job runner: Idealista worked for a while and then stopped. Everything Hoomes shows today comes from Caasa.it.
 
 When you make a request, Hoomes scrapes the data on-demand, so it may take a bit of time to fetch the initial data. However, once the data is retrieved, it’s saved into your browser's IndexedDB, enabling faster searches without the need to re-fetch data. This approach reduces server load and ensures a smoother experience. Additionally, a backend SQLite database is used to cache results, further optimizing performance and reducing delays in subsequent searches.
 
@@ -82,7 +86,7 @@ npm run readme
 
 ## 🛠️ Future Enhancements
 
-We aim to integrate additional real estate platforms, making it easier than ever to find your dream home in Italy. Stay tuned for updates and new features!
+We aim to bring the Idealista scraper back to life and integrate additional real estate platforms, making it easier than ever to find your dream home in Italy. Stay tuned for updates and new features!
 
 ## 🤝 Contributing
 
