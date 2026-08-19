@@ -5,10 +5,19 @@ import re
 import threading
 import time
 from urllib.parse import urlsplit
+from urllib.robotparser import RobotFileParser
+
+# Identify ourselves. Caasa.it publishes a robots.txt that reasons about named
+# crawlers, so pretending to be Chrome is both rude and useless. Override with
+# SCRAPER_USER_AGENT if a WAF rejects the honest one.
+USER_AGENT = os.environ.get(
+  'SCRAPER_USER_AGENT',
+  'HoomesBot/1.0 (+https://github.com/pinkynrg/hoomes)',
+)
 
 headers = {
-  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
-  'Accept-Language': 'en-US,en;q=0.9,it;q=0.8',
+  'User-Agent': USER_AGENT,
+  'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
 }
 
 # Statuses worth waiting out: throttling and transient server errors.
@@ -24,15 +33,89 @@ MAX_RETRY_SLEEP = float(os.environ.get('SCRAPER_MAX_RETRY_SLEEP', '60'))
 REQUEST_TIMEOUT = float(os.environ.get('SCRAPER_TIMEOUT_SECONDS', '30'))
 MAX_REDIRECTS = 3
 
-# Minimum gap between two requests to the same host, across every thread in
-# this process. Caasa.it answers a burst with 429s, so the fix is spacing
-# requests out rather than firing fewer of them at once.
-MIN_REQUEST_INTERVAL = float(os.environ.get('SCRAPER_MIN_REQUEST_INTERVAL', '1.5'))
-REQUEST_JITTER = float(os.environ.get('SCRAPER_REQUEST_JITTER', '0.5'))
+# Caasa.it documents its own ceiling in robots.txt: "RateLimitFilter (60
+# richieste/minuto per IP)". Stay under it with headroom rather than probing
+# for the edge; a host that publishes a Crawl-delay slows us down further.
+MAX_REQUESTS_PER_MINUTE = float(os.environ.get('SCRAPER_MAX_REQUESTS_PER_MINUTE', '50'))
+REQUEST_JITTER = float(os.environ.get('SCRAPER_REQUEST_JITTER', '0.3'))
+RESPECT_ROBOTS = os.environ.get('SCRAPER_RESPECT_ROBOTS', '1') != '0'
+
+MIN_REQUEST_INTERVAL = 60.0 / MAX_REQUESTS_PER_MINUTE if MAX_REQUESTS_PER_MINUTE > 0 else 0
 
 _registry_lock = threading.Lock()
 _host_locks = {}
 _last_request_at = {}
+_robots = {}
+
+
+class DisallowedByRobots(Exception):
+  """The host's robots.txt does not allow this path for our user agent."""
+
+  def __init__(self, host, path):
+    self.host = host
+    self.path = path
+    super().__init__('robots.txt on {} disallows {}'.format(host, path))
+
+
+def _sanitize_robots(lines):
+  """Rewrite wildcard rules into something RobotFileParser understands.
+
+  The stdlib parser predates the wildcard extension and matches rule paths as
+  plain prefixes, so `Disallow: /report*` silently matches nothing. Truncating
+  a pattern at its first `*` gives the same prefix semantics for the common
+  trailing-wildcard case and over-blocks (the safe direction) for the rest.
+  A pattern that truncates to nothing cannot be expressed this way: it is left
+  alone and reported, rather than being turned into a site-wide block.
+  """
+  sanitized = []
+
+  for line in lines:
+    directive, _, value = line.partition(':')
+    if directive.strip().lower() not in ('allow', 'disallow') or '*' not in value and '$' not in value:
+      sanitized.append(line)
+      continue
+
+    pattern = value.strip()
+    prefix = pattern.split('*')[0].rstrip('$')
+    if len(prefix) > 1:
+      sanitized.append('{}: {}'.format(directive.strip(), prefix))
+    else:
+      print('robots.txt: cannot express rule "{}", ignoring it'.format(line.strip()))
+
+  return sanitized
+
+
+def _robots_for(host):
+  """Fetch and cache the host's robots.txt. An unreachable or missing file is
+  cached as 'everything allowed', which is what the standard prescribes."""
+  with _registry_lock:
+    cached = _robots.get(host)
+  if cached is not None:
+    return cached
+
+  parser = RobotFileParser()
+  try:
+    status, _, body = request('GET', host, '/robots.txt')
+    parser.parse(_sanitize_robots(body.splitlines()) if 200 <= status < 300 else [])
+  except Exception:
+    parser.parse([])
+
+  with _registry_lock:
+    _robots[host] = parser
+  return parser
+
+
+def _host_interval(host):
+  """Our own spacing, or the host's Crawl-delay when it asks for more."""
+  interval = MIN_REQUEST_INTERVAL
+  if RESPECT_ROBOTS:
+    try:
+      declared = _robots_for(host).crawl_delay(USER_AGENT)
+    except Exception:
+      declared = None
+    if declared:
+      interval = max(interval, float(declared))
+  return interval
 
 
 def _throttle(host):
@@ -41,14 +124,15 @@ def _throttle(host):
   The per-host lock is held across the sleep on purpose: it serialises the
   worker's threads so the spacing applies to the host, not to each thread.
   """
-  if MIN_REQUEST_INTERVAL <= 0:
+  interval = _host_interval(host)
+  if interval <= 0:
     return
 
   with _registry_lock:
     lock = _host_locks.setdefault(host, threading.Lock())
 
   with lock:
-    gap = MIN_REQUEST_INTERVAL + random.uniform(0, REQUEST_JITTER)
+    gap = interval + random.uniform(0, REQUEST_JITTER)
     last = _last_request_at.get(host)
     if last is not None:
       wait = gap - (time.monotonic() - last)
@@ -125,6 +209,9 @@ def get(host, path, params = None, headers = headers):
   Raises HttpError when the host keeps refusing, so callers fail loudly
   instead of silently scraping an error page for listings.
   """
+  if RESPECT_ROBOTS and not _robots_for(host).can_fetch(USER_AGENT, 'https://{}{}'.format(host, path)):
+    raise DisallowedByRobots(host, path)
+
   status = None
   response_headers = {}
 

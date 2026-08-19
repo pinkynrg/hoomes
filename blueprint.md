@@ -55,17 +55,21 @@ npm start
 
 ### Tuning the scraper
 
-Caasa.it answers a burst of requests with `429 Too Many Requests`, so the
-worker paces itself: requests to a host are spaced out process-wide, and a
-refused page is retried with backoff (honouring `Retry-After`) before the
-comune is reported as failed. A comune that is only partly scraped still saves
-what it got, and the next attempt re-fetches only the listings that are
-missing. Defaults are deliberately slow; raise them at your own risk.
+The worker reads `robots.txt` before touching a host, skips anything it
+disallows, and identifies itself as `HoomesBot`. Caasa.it documents its own
+ceiling there — *"RateLimitFilter (60 richieste/minuto per IP)"* — so requests
+are spaced out process-wide to stay under it, and a `Crawl-delay` slows us down
+further if one is declared. A refused page is retried with backoff (honouring
+`Retry-After`) before the comune is reported as failed; a comune that is only
+partly scraped still saves what it got, and the next attempt re-fetches just
+the listings that are missing.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `SCRAPER_MIN_REQUEST_INTERVAL` | `1.5` | Seconds between two requests to the same host |
-| `SCRAPER_REQUEST_JITTER` | `0.5` | Random extra delay added to that gap |
+| `SCRAPER_MAX_REQUESTS_PER_MINUTE` | `50` | Request budget per host (their server-side limit is 60) |
+| `SCRAPER_REQUEST_JITTER` | `0.3` | Random extra delay added between requests |
+| `SCRAPER_USER_AGENT` | `HoomesBot/1.0 (+repo url)` | Who we say we are |
+| `SCRAPER_RESPECT_ROBOTS` | `1` | Set to `0` to skip the robots.txt check |
 | `SCRAPER_MAX_WORKERS` | `2` | Listing pages fetched in parallel |
 | `SCRAPER_PAGE_DELAY_SECONDS` | `1` | Pause between result pages |
 | `SCRAPER_MAX_ATTEMPTS` | `4` | Attempts per page before giving up |
@@ -76,6 +80,15 @@ missing. Defaults are deliberately slow; raise them at your own risk.
 
 Scraping a whole province takes a while at these settings: that is the price of
 not getting blocked halfway through.
+
+To see what the portal serves before changing the scraper, run the read-only
+probe — it reports whether the search page already carries the description,
+price and size (which would remove the per-listing fetch entirely) and whether
+the sitemap carries `lastmod`:
+
+```bash
+cd server && poetry run python scripts/probe_caasa.py reggio-emilia carpineti
+```
 
 ## 🎬 The demo above
 
