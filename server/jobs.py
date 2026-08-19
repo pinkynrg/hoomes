@@ -2,6 +2,7 @@ from services.scraper import Caasa
 from datetime import datetime, timedelta
 from db import db, House, upsert_record
 from db import Location
+from utils import PartialScrapeError
 
 from peewee import fn
 
@@ -20,8 +21,27 @@ def fetch_homes(location: Location):
     lowest_updated_at = House.select(fn.Min(House.updated_at)).where((House.city == location.nome) & (House.province == location.provincia_nome)).scalar()
 
     if lowest_updated_at is None or lowest_updated_at < cache_cutoff:
-        # Raises HttpError/ScrapeError if the site refuses us or changes shape.
-        data = Caasa.fetch(location)
+        # Listings we already hold and consider current: the scraper reports
+        # them as seen without re-fetching, so retrying a throttled comune only
+        # pays for what is actually missing.
+        known_uuids = {
+            house.uuid for house in House
+            .select(House.uuid)
+            .where(
+                (House.city == location.nome)
+                & (House.province == location.provincia_nome)
+                & (House.updated_at >= cache_cutoff)
+            )
+        }
+
+        partial_failure = None
+        try:
+            # Raises HttpError/ScrapeError if the site refuses us or changes shape.
+            data = Caasa.fetch(location, known_uuids=known_uuids)
+        except PartialScrapeError as error:
+            # Keep what came back so the next attempt starts further along.
+            data = error.collected
+            partial_failure = error
 
         if data:
             # Keep track of the updated UUIDs
@@ -30,6 +50,11 @@ def fetch_homes(location: Location):
             with db.atomic():
                 # Update the House records or insert new ones
                 for item in data:
+                    if item.get('cached'):
+                        # Untouched this run, but still on the portal.
+                        updated_uuids.append(item['uuid'])
+                        continue
+
                     upsert_record(
                         House,
                         unique_field='uuid',
@@ -48,18 +73,25 @@ def fetch_homes(location: Location):
                     )
                     updated_uuids.append(item['uuid'])
 
-                # Delete the listings that are gone from the portal. Only ever
-                # runs on a scrape that returned something: with an empty list
-                # `uuid NOT IN ()` compiles to `1 = 1` and wipes the comune.
-                House.delete().where(
-                    (House.city == location.nome) &
-                    (House.province == location.provincia_nome) &
-                    (House.uuid.not_in(updated_uuids))
-                ).execute()
-        else:
+                # Delete the listings that are gone from the portal. Skipped on
+                # an incomplete scrape, whose list of seen uuids is missing the
+                # pages we never got to read. Never runs on an empty scrape
+                # either: `uuid NOT IN ()` compiles to `1 = 1`, wiping the comune.
+                if partial_failure is None:
+                    House.delete().where(
+                        (House.city == location.nome) &
+                        (House.province == location.provincia_nome) &
+                        (House.uuid.not_in(updated_uuids))
+                    ).execute()
+        elif partial_failure is None:
             print('No listings returned for {} ({}): keeping the cached rows'.format(
                 location.nome, location.provincia_nome,
             ))
+
+        if partial_failure is not None:
+            # Progress is saved; the job still fails so the run is reported as
+            # incomplete and the comune can be picked up again later.
+            raise partial_failure
 
     # Return all House records with comune equal to the input
     records = House.select().where((House.city == location.nome) & (House.province == location.provincia_nome))

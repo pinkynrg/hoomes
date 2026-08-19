@@ -1,4 +1,4 @@
-from utils import get, HttpError, ScrapeError
+from utils import get, HttpError, PartialScrapeError, ScrapeError
 from bs4 import BeautifulSoup
 from db import db, upsert_record, Location
 import concurrent.futures
@@ -11,7 +11,7 @@ import time
 
 # One comune used to open 30 connections at once. Fine on its own, but a whole
 # province queues 40+ of those bursts back to back and the sites start refusing.
-MAX_WORKERS = int(os.environ.get('SCRAPER_MAX_WORKERS', '4'))
+MAX_WORKERS = int(os.environ.get('SCRAPER_MAX_WORKERS', '2'))
 PAGE_DELAY_SECONDS = float(os.environ.get('SCRAPER_PAGE_DELAY_SECONDS', '1'))
 
 class ComuniItalia: 
@@ -280,7 +280,7 @@ class Caasa:
       return {
         "uuid": page_link, 
         "url": Caasa.PROTOCOL + Caasa.HOST + page_link, 
-        "image": image["src"],
+        "image": image["src"] if image else '',
         "m2": m2,
         "source": 'caasa.it',
         "price": int(re.sub(r'\D', '', price)),
@@ -290,10 +290,10 @@ class Caasa:
         "comment": comment, 
       }
 
-    except HttpError:
-      # The site is refusing us. Failing here is deliberate: dropping the listing
-      # would make the pruning step below delete a house that still exists.
-      raise
+    except HttpError as error:
+      # Report it upwards: silently dropping the listing would let the pruning
+      # step delete a house that still exists.
+      return {'failed': page_link, 'reason': str(error)}
     except Exception as e:
       print("ERROR fetching data @ {}: {}".format(page_link, e))
 
@@ -350,14 +350,34 @@ class Caasa:
         
       return None
 
+  def fetch_split(collection, failures, **params):
+    """Run a narrowed sub-search, keeping partial results instead of losing
+    the whole branch when one slice gets refused."""
+    try:
+      collection += Caasa.fetch(**params)
+    except PartialScrapeError as partial:
+      collection += partial.collected
+      failures += partial.failures
+
   def fetch( 
     location: Location,
     min_price = 1,
     max_price = 1000000,
     min_size = 1,
     max_size = 500,
+    known_uuids = None,
     **kwargs,
   ):
+    """Scrape one comune.
+
+    `known_uuids` are listings we already hold and consider fresh: they are
+    reported back as seen but their detail page is not fetched again, which is
+    what makes retrying a throttled comune cheap.
+
+    Raises PartialScrapeError when some pages were refused, carrying whatever
+    was collected so the caller can save the progress.
+    """
+    known_uuids = known_uuids or set()
     
     def get_final_url(page):
 
@@ -383,6 +403,7 @@ class Caasa:
       return fav_container['data-canonical']
     
     collection = []
+    failures = []
     page_link = get_final_url(1)
     first_tree = BeautifulSoup(get(Caasa.HOST, page_link), "html.parser")
 
@@ -397,41 +418,53 @@ class Caasa:
     if (total_houses and total_houses > 165 * 22):
       if max_price - min_price > 1:
         mid_price = min_price+int((max_price-min_price)/2)
-        collection += Caasa.fetch(
+        Caasa.fetch_split(
+          collection,
+          failures,
           location=location,
           min_price=min_price, 
           max_price=mid_price, 
           min_size=min_size, 
           max_size=max_size, 
-          **kwargs
-        )
-        collection += Caasa.fetch(
+          **kwargs,
+          known_uuids=known_uuids,
+          )
+        Caasa.fetch_split(
+          collection,
+          failures,
           location=location,
           min_price=mid_price, 
           max_price=max_price, 
           min_size=min_size, 
           max_size=max_size, 
-          **kwargs
-        )
+          **kwargs,
+          known_uuids=known_uuids,
+          )
       else:
         if max_size - min_size > 1:
           mid_size = min_size+int((max_size-min_size)/2)
-          collection += Caasa.fetch(
+          Caasa.fetch_split(
+          collection,
+          failures,
             location=location,
             min_price=min_price, 
             max_price=max_price, 
             min_size=min_size, 
             max_size=mid_size, 
-            **kwargs
-          )
-          collection += Caasa.fetch(
+            **kwargs,
+            known_uuids=known_uuids,
+            )
+          Caasa.fetch_split(
+          collection,
+          failures,
             location=location,
             min_price=min_price, 
             max_price=max_price, 
             min_size=mid_size, 
             max_size=max_size, 
-            **kwargs
-          )
+            **kwargs,
+            known_uuids=known_uuids,
+            )
         else:
           pass
     else:
@@ -440,6 +473,10 @@ class Caasa:
         items_list = html_tree.find_all("div", attrs={"class": "result-item"})
         links = [get_house_link(item) for item in items_list]
 
+        # Already held and still fresh: report as seen, skip the detail page.
+        collection += [{'uuid': link, 'cached': True} for link in links if link in known_uuids]
+        pending = [link for link in links if link not in known_uuids]
+
         # Create a new function that takes both fixed_param and link
         get_house_data_with_meta = partial(
         Caasa.get_house_data, 
@@ -447,13 +484,27 @@ class Caasa:
         )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-          for result in executor.map(get_house_data_with_meta, links):
-            if result is not None:
-              collection += [result]
+          for result in executor.map(get_house_data_with_meta, pending):
+            if result is None:
+              continue
+            if 'failed' in result:
+              failures += [result['reason']]
+              continue
+            collection += [result]
+
         next_page = Caasa.get_next_page(html_tree)
         if not next_page: 
           break
+
         time.sleep(PAGE_DELAY_SECONDS)
-        html_tree = BeautifulSoup(get(Caasa.HOST, get_final_url(next_page)), "html.parser")
+        try:
+          html_tree = BeautifulSoup(get(Caasa.HOST, get_final_url(next_page)), "html.parser")
+        except HttpError as error:
+          # Refused mid-pagination: keep the pages we did read.
+          failures += [str(error)]
+          break
+
+    if failures:
+      raise PartialScrapeError(location.nome, collection, failures)
 
     return collection

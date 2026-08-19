@@ -63,6 +63,30 @@ npm start
 ```
 
 
+### Tuning the scraper
+
+Caasa.it answers a burst of requests with `429 Too Many Requests`, so the
+worker paces itself: requests to a host are spaced out process-wide, and a
+refused page is retried with backoff (honouring `Retry-After`) before the
+comune is reported as failed. A comune that is only partly scraped still saves
+what it got, and the next attempt re-fetches only the listings that are
+missing. Defaults are deliberately slow; raise them at your own risk.
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `SCRAPER_MIN_REQUEST_INTERVAL` | `1.5` | Seconds between two requests to the same host |
+| `SCRAPER_REQUEST_JITTER` | `0.5` | Random extra delay added to that gap |
+| `SCRAPER_MAX_WORKERS` | `2` | Listing pages fetched in parallel |
+| `SCRAPER_PAGE_DELAY_SECONDS` | `1` | Pause between result pages |
+| `SCRAPER_MAX_ATTEMPTS` | `4` | Attempts per page before giving up |
+| `SCRAPER_THROTTLE_BACKOFF_SECONDS` | `10` | Base backoff after a 429 |
+| `SCRAPER_BACKOFF_SECONDS` | `2` | Base backoff after other retryable errors |
+| `SCRAPER_MAX_RETRY_SLEEP` | `60` | Cap on any single backoff |
+| `SCRAPER_TIMEOUT_SECONDS` | `30` | Per-request timeout |
+
+Scraping a whole province takes a while at these settings: that is the price of
+not getting blocked halfway through.
+
 [![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#-the-demo-above)
 
 ## ➤ 🎬 The demo above
